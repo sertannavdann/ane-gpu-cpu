@@ -29,7 +29,10 @@ It prints a **prediction** before each lab, the lab's own output, a **predicted 
 | `python3 labs/run_labs.py --only llm` | predict and measure your **gRPC_llm** model servers (start them with `make llm-up` in gRPC_llm) | ~2 min |
 | `bash labs/portable/compare_native_vs_linux.sh` | same program, macOS vs Linux on the same chip | ~1 min |
 
-**Before you trust any number**, look at the first lines the runner prints. It lists other apps using the CPU and the GPU. During the runs in this guide, Rider and Unreal Editor were each using a full CPU core, and the GPU was 47–86 % busy with no model request in flight (probably Unreal, which renders with Metal). The runner works around the busy CPU cores automatically, but it can't free the GPU. Close those apps for numbers you want to quote.
+**Before you trust any number**, look at the first lines the runner prints. It lists other apps using the CPU and the GPU. This guide uses two sets of runs:
+
+- **Quiet machine** (2026-10-12, 00:50–01:02): Rider and Unreal Editor closed, GPU 0–3 % busy. These are the numbers to quote. Full evidence: **[results-2026-10-12.md](results-2026-10-12.md)**.
+- **Busy machine** (the evening before): Rider and Unreal Editor each held a full CPU core, and the GPU was 47–86 % busy with no model request in flight (Unreal renders with Metal). These numbers are kept wherever the difference teaches something, because "another app was running" is the most common reason a benchmark lies.
 
 ---
 
@@ -48,21 +51,27 @@ It prints a **prediction** before each lab, the lab's own output, a **predicted 
 
 **Unified memory** means the CPU, GPU and Neural Engine all read the *same* RAM. There is no separate graphics card with its own memory. That's why a 9 GB model can run on the GPU without being copied, and also why every chip on the SoC competes for the same bandwidth.
 
-What the labs measured (2026-10-12, with the busy apps noted above):
+What the labs measured:
 
-| | Paper prediction | Measured | Lab |
-| --- | ---: | ---: | --- |
-| One core, one chain of dependent maths | 9.0 GFLOP/s | 9.3 | peak |
-| One core, best case | 144 GFLOP/s | 119 | peak |
-| Independent chains needed to keep a core busy | 16 | 16 | peak |
-| Inferred clock speed | 4.5 GHz (reported max) | ≈4.6 GHz | peak |
-| Fetch from L1 cache | 0.67 ns | 0.77 ns | latency |
-| Fetch from main memory (DRAM) | ~100 ns | 111–132 ns | latency |
-| Memory bandwidth, all CPU cores | 410 GB/s (spec) | ~224 GB/s | bandwidth |
-| 8-bit quantization error (block 32) | 0.0047 | 0.0053 | quant |
-| 4-bit quantization error (block 32) | 0.0854 | 0.0969 | quant |
-| Qwen2.5-14B decode on the GPU | 48 tok/s | 31.5 (66 %) | llm |
-| Qwen2.5-3B (MLX) decode on the GPU | 236 tok/s | 125–135 (53–57 %) | llm |
+| | Paper prediction | Quiet machine | Busy machine | Lab |
+| --- | ---: | ---: | ---: | --- |
+| One core, one chain of dependent maths | 9.0 GFLOP/s | 10.5 | 9.3 | peak |
+| One core, best case | 144 GFLOP/s | 133 (92 %) | 119 | peak |
+| Independent chains needed to keep a core busy | 16 | 16 | 16 | peak |
+| All 10 P-cores | 1,152 GFLOP/s (8 cores) | **1,150** (10 cores) | 438 | peak |
+| Fetch from L1 cache | 0.67 ns | 0.67 | 0.77 | latency |
+| Fetch from main memory (DRAM) | ~100 ns | 109 | 111–132 | latency |
+| Memory bandwidth, one core | ? | 90 GB/s | 78 | bandwidth |
+| Memory bandwidth, all CPU cores | 410 GB/s (spec) | 253 (62 %) | 224 | bandwidth |
+| Decode-style GEMV, best | = bandwidth roof | 248 GB/s (98 %) | 201 | gemv |
+| 8-bit quantization error (block 32) | 0.0047 | 0.0053 | 0.0053 | quant |
+| 4-bit quantization error (block 32) | 0.0854 | 0.0969 | 0.0969 | quant |
+| Q8_0 decode speedup vs fp16 | 1.88× | **1.88×** | 1.65× | quant |
+| Q4_0 decode speedup vs fp16 | 3.56× | 2.76× | 2.31× | quant |
+| Qwen2.5-14B decode on the GPU | 48 tok/s | **35.3 (74 %)** | 29–31 | llm |
+| Qwen2.5-3B (MLX) decode on the GPU | 236 tok/s | **150 (64 %)** | 121–135 | llm |
+
+Notice the pattern: the quiet machine moves *every* multi-core and GPU number up by 10–160 %, while single-core maths and quantization error don't move at all. Noisy neighbours steal shared resources (cores, bandwidth, the GPU), not the arithmetic inside one core.
 
 The rest of this guide explains each row: why the guess was right, or why it missed.
 
@@ -82,11 +91,20 @@ The rest of this guide explains each row: why the guess was right, or why it mis
 
 **Run.** `labs/build/p1_peak --part chains --seconds 1`
 
-**What you see.** 1 chain: 9.3 GFLOP/s. 16 chains: 119 GFLOP/s, **13× faster with identical instructions**. Half precision (fp16) gives exactly 2×, because a 128-bit register holds 8 fp16 numbers instead of 4 fp32.
+**What you see (quiet machine).** 1 chain: 10.5 GFLOP/s. 16 chains: 133 GFLOP/s, **13× faster with identical instructions**, and 92 % of the paper peak. Half precision (fp16) gives exactly 2× (270 GFLOP/s), because a 128-bit register holds 8 fp16 numbers instead of 4 fp32.
 
-**Why the best case lands at 82 % of the guess:** the 4.5 GHz clock and "4 FMA pipes" are public estimates, not Apple specs. Sustaining all four every cycle also needs the loop overhead to fit around them. The 1-chain result (9.3 measured vs 9.0 predicted) implies a **4.6 GHz** clock, so the clock guess was right. The shortfall is in keeping all pipes fed.
+**A prediction that broke, and what it taught.** The 1-chain result is *faster* than predicted: 10.5 vs 9.0 GFLOP/s. If an FMA really takes 4 cycles, that implies a 5.2 GHz clock, which is above the M4's reported 4.5 GHz. A second, independent estimate disagrees: Lab 2's L1 hit takes 0.67 ns, which is exactly 3 cycles at 4.5 GHz. Both assumptions can't be right. The likely one to drop is the 4-cycle FMA latency: at 4.5 GHz the measured chain is about **3.4 cycles per FMA**. (On the busy machine the FMA estimate came out at 4.6 GHz, close to the reported clock, so it looked right, and an earlier draft of this guide accepted it. The L1 estimate from the same evening, 3.9 GHz, already disagreed; nobody compared the two.) Only hardware cycle counters can settle it, which is why "add Instruments counters" is on the missing list. It is also a ready answer for "a time a measurement disproved your hypothesis".
 
-**The thread surprise** (`--part threads`): per-core speed was 118 (1 thread), 112 (4), **96 (8)**, then collapsed to **44 (10)**. The clock drops a little when all cores are busy (118 → 96), but not by 60 %. The real reason is the **barrier effect**: every step waits for the slowest thread, and with two other apps each holding a core, the 9th and 10th threads had to share a core. One slow worker holds up the whole team. **Try it:** close Rider and Unreal and rerun. If 10 threads then beat 8, the explanation holds.
+**Threads: the barrier effect, confirmed.**
+
+| Threads | 1 | 2 | 4 | 5 | 6 | 8 | 10 | 14 |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| Quiet: GFLOP/s per thread | 122 | 120 | 118 | 116 | 116 | 116 | **115** | 41 |
+| Busy (Rider + Unreal): per thread | 118 | — | 112 | — | — | 96 | **44** | 36 |
+
+On the quiet machine, 10 threads scale almost perfectly (**1,150 GFLOP/s**, 94 % of 10× one core). On the busy machine the same 10 threads gave 438: every step waits for the slowest thread, and with two apps each holding a core, at least one of the 10 threads always shared a core. Even on the quiet machine, **14 threads collapse to 41 per thread**. Threads 11–14 land on the slow efficiency cores (≈15 GFLOP/s each), and every step waits for them. One slow worker holds up the whole team. The same mechanism explains "why does llama.cpp stop scaling" in P3.
+
+**Over time** (`--soak 120`): ≈1,100 GFLOP/s held for two minutes with no thermal decline (last/first 96 %), except a 30-second dip to as low as 26 % that then **fully recovered**. Throttling from heat doesn't recover while the load continues, so something else briefly took cores (iCloud sync and VS Code were running). The barrier effect turns a small interruption into a big drop.
 
 **A bug this lab caught.** The first version wrote the chain as `b + acc×a`. The compiler added a register copy to every step (`fmla` + `mov`), which made it look as though the clock were 2.6 GHz. Writing `acc + a×b` gives one instruction per step. Lesson: **look at the assembly before trusting a speed test**:
 ```bash
@@ -109,9 +127,9 @@ objdump -d --no-show-raw-insn labs/build/p1_peak | awk '/fma_chains_f32ILi1EE.*>
 
 **Run.** `labs/build/p1_latency --seconds 0.5`
 
-**What you see.** 0.77 ns up to 112 KB (L1 is 128 KB); ≈7 ns in L2; a big jump past ~12–16 MB, where the L2 runs out; **111 ns** in DRAM (132 ns when the machine was busier). The "sequential" column follows the same notes in order. It stays near 9 ns per line even at 512 MB, because the **prefetcher** sees the pattern and fetches ahead.
+**What you see.** 0.67 ns up to 112 KB (L1 is 128 KB), exactly the predicted 3 cycles; ≈6 ns in L2; a big jump past ~12–16 MB, where the L2 runs out; **109 ns** in DRAM (111–132 ns on the busy machine: other apps' memory traffic makes everyone wait longer). The "sequential" column follows the same notes in order. It stays near 8 ns per line even at 512 MB, because the **prefetcher** sees the pattern and fetches ahead.
 
-**Why it matters.** To stream 78 GB/s from memory that takes 111 ns to answer, a core must have about 8.7 KB (68 cache lines) **in flight at once**. That's Little's law: *amount in flight = rate × wait time*. A core can only track so many outstanding requests, which is why one core can't use the whole memory system.
+**Why it matters.** To stream 90 GB/s from memory that takes 109 ns to answer, a core must have about 9.8 KB (77 cache lines of 128 bytes) **in flight at once**. That's Little's law: *amount in flight = rate × wait time*. A core can only track so many outstanding requests, which is why one core can't use the whole memory system.
 
 **On other chips.** Apple uses 128-byte cache lines and 16 KB memory pages; almost every other CPU (x86, Qualcomm, generic ARM64) uses 64-byte lines and 4 KB pages. See [other-chips.md](other-chips.md).
 
@@ -119,7 +137,7 @@ objdump -d --no-show-raw-insn labs/build/p1_peak | awk '/fma_chains_f32ILi1EE.*>
 
 ## Lab 3: `bandwidth`, how fast can bytes flow?
 
-**In one sentence:** one core can pull ~78 GB/s from memory; the CPU cores together top out at ~224 GB/s, about half of what the chip can deliver.
+**In one sentence:** one core can pull ~90 GB/s from memory; the CPU cores together top out at ~253 GB/s, about 62 % of what the chip can deliver.
 
 **Interview questions it answers:** "Measure your machine's peak bandwidth" [A] · "Why does scaling stop?" [A][R]
 
@@ -127,17 +145,19 @@ objdump -d --no-show-raw-insn labs/build/p1_peak | awk '/fma_chains_f32ILi1EE.*>
 
 **Run.** `labs/build/p1_bandwidth --seconds 1`
 
-**What you see.** One core: L1 ≈160, L2 ≈106, DRAM ≈78 GB/s. Adding cores: 1 → 78, 4 → 214, 6 → **224**, then flat. The 4 efficiency cores alone manage ≈32 GB/s.
+**What you see (quiet).** One core: L1 ≈175, L2 ≈113, DRAM ≈90 GB/s. Adding cores: 1 → 87, 2 → 166, 3 → 212, **4 → 252**, then flat at ≈253 up to 10 threads. **Four cores are enough to saturate the CPU side.** The 4 efficiency cores alone manage only ≈19 GB/s.
+
+**An unexplained result, kept on purpose.** In the same sweep, the *write* kernel fell from ≈240 GB/s to ≈105 GB/s at 8 and 10 threads, while reads stayed at 253. One possible cause: a write to memory first fetches the line (write-allocate), so many writers double the real traffic and contend at the memory controller. That's a hypothesis only. Write-allocate and coherence traffic are exactly what hardware counters would show. Interviewers like candidates who keep anomalies instead of hiding them.
 
 **Why the gap from 410.** The 410 GB/s is for the *whole chip*. The CPU clusters connect to memory through links that can't carry all of it. The GPU can. This one fact explains most of the "CPU vs GPU" difference in LLM speed later on.
 
-**Tie to the ANE story (P0).** The Neural Engine streamed weights at ≈90 GB/s, about **one CPU core's worth**, or 22 % of the chip's bandwidth (the earlier R1 note said "one sixth", which assumed the 16-core chip). That is the main reason it decoded 3.5× slower than the GPU.
+**Tie to the ANE story (P0).** The Neural Engine streamed weights at ≈90 GB/s, **exactly one CPU core's worth** (90 GB/s measured here), or 22 % of the chip's bandwidth (the earlier R1 note said "one sixth", which assumed the 16-core chip). That is the main reason it decoded 3.5× slower than the GPU.
 
 ---
 
 ## Lab 4: `gemm`, multiplying matrices from scratch
 
-**In one sentence:** the same multiplication gets **~1,900×** faster through access order, cache-sized tiles, vector instructions, threads, and finally Apple's matrix unit.
+**In one sentence:** the same multiplication gets **~2,000×** faster through access order, vector instructions in a register-blocked micro-kernel, threads, and finally Apple's matrix unit.
 
 **Interview questions it answers:** "How do you choose tile sizes?" [A] · "Why is decode memory-bound and prefill compute-bound?" [A][R] · "What does a batch of 8 change?" [A]
 
@@ -145,18 +165,20 @@ objdump -d --no-show-raw-insn labs/build/p1_peak | awk '/fma_chains_f32ILi1EE.*>
 | --- | --- | --- | ---: |
 | naive | textbook three loops | walks down a column, so every multiply touches a new cache line | 1.5 GFLOP/s |
 | ikj | swap two loops | walks along rows, so each fetched cache line is fully used | 21× |
-| blocked | work on cache-sized tiles | reuse a tile while it's on the desk instead of going back to the library | 19× (no gain here: the matrix already fits in L2; try `--n 2048`) |
-| packed + NEON | copy tiles into tidy strips; an 8×8 block of the answer lives in 16 registers | 16 independent multiply-adds per step, exactly Lab 1's "16 chains" | 69× |
-| 10 threads | split the work | more cores | 349× |
-| Accelerate | Apple's library | uses the **SME matrix unit**, a separate engine with a much higher ceiling than NEON | **1,929×** (≈2.9 TFLOP/s) |
+| blocked | work on cache-sized tiles | reuse a tile while it's on the desk instead of going back to the library | 19× (**slower** than ikj, see below) |
+| packed + NEON | copy tiles into tidy strips; an 8×8 block of the answer lives in 16 registers | 16 independent multiply-adds per step, exactly Lab 1's "16 chains" | 70× |
+| 10 threads | split the work | more cores | 532× |
+| Accelerate | Apple's library | uses the **SME matrix unit**, a separate engine with a much higher ceiling than NEON | **2,018×** (≈3.0 TFLOP/s) |
+
+**Blocking alone didn't help, even when it "should" have.** An earlier version of this guide predicted that a larger matrix (2048, 16 MB per matrix) would make blocking win. Measured at 2048: ikj 31 GFLOP/s, blocked 26, packed 107, packed on 10 threads 832, Accelerate 2,841. This chip has a 16 MB L2 per group and aggressive prefetchers, so ikj's long unit-stride rows are already served well. Tiling the loops without also packing the data and keeping the result in registers just adds loop overhead. Blocking pays off here only as part of the full recipe (packing + register micro-kernel). On a chip with small caches and weak prefetching the plain blocked version would matter more. Memory hierarchy decides which textbook step pays.
 
 **The most important result is Part 2 ("shapes").** The same weights (1024 → 3072, one Qwen3-0.6B layer) are multiplied by M tokens at once:
-- **M = 1** (generating one token, "decode"): every weight is fetched for **one** multiply-add. That's 0.5 FLOP per byte, so the speed is set by memory: **213 GFLOP/s**.
-- **M = 512** (reading a prompt, "prefill"): every weight fetched is used **512 times**. The speed is set by compute: **2,967 GFLOP/s**.
+- **M = 1** (generating one token, "decode"): every weight is fetched for **one** multiply-add. That's 0.5 FLOP per byte, so the speed is set by memory: **253 GFLOP/s**.
+- **M = 512** (reading a prompt, "prefill"): every weight fetched is used **512 times**. The speed is set by compute: **3,218 GFLOP/s**.
 
-**Same weights, 14× faster, just by batching.** This is half of the ANE story: its runtime read the prompt one token at a time, which turned prefill into decode.
+**Same weights, 13× faster, just by batching.** This is half of the ANE story: its runtime read the prompt one token at a time, which turned prefill into decode.
 
-**Prediction that "failed" on purpose.** The paper prediction for M=1 from DRAM is 0.5 × 224 ≈ 112 GFLOP/s. Measured: 213. The 12 MB test matrix stays in the cache between repeats, so it never comes from DRAM. Lab 5 fixes that by using a model-sized set of weights.
+**Prediction that "failed" on purpose.** The paper prediction for M=1 from DRAM is 0.5 × 253 ≈ 127 GFLOP/s. Measured: 253, exactly 2×. The 12 MB test matrix stays in the cache between repeats, so it never comes from DRAM. Lab 5 fixes that by using a model-sized set of weights.
 
 ---
 
@@ -166,17 +188,17 @@ objdump -d --no-show-raw-insn labs/build/p1_peak | awk '/fma_chains_f32ILi1EE.*>
 
 **Interview questions it answers:** "Max tok/s for a 7B Q4 model (~4 GB) at 80 GB/s?" (≈20) [A] · "How close is your kernel to the bandwidth bound?" [A]
 
-**Predict.** Best case = the measured memory roof (~224 GB/s). One core: 4 chains × 4 numbers ÷ 4 cycles × 4.5 GHz ≈ 18 G weights/s = **72 GB/s** (a maths limit, not a memory one).
+**Predict.** Best case = the measured memory roof (~253 GB/s). One core: 4 chains × 4 numbers ÷ 4 cycles × 4.5 GHz ≈ 18 G weights/s = **72 GB/s** (a maths limit, not a memory one).
 
 **Run.** `labs/build/p1_gemv --seconds 1`
 
 **What you see.**
 - A plain C loop: 8.6 GB/s. The compiler is not allowed to reorder floating-point additions, so the loop stays one slow chain (Lab 1 again).
-- NEON, one core: 67 GB/s, close to the 72 predicted. **One core is limited by maths, not memory.**
-- NEON, 4 threads: **201 GB/s, 90 % of the memory roof**. Beyond this, nothing helps except reading fewer bytes.
+- NEON, one core: 73–76 GB/s against the 72 predicted. **One core is limited by maths, not memory.** (Slightly *above* the prediction, the same clue as in Lab 1: with the measured ≈3.4-cycle FMA the limit is ≈85 GB/s.)
+- NEON, all P-cores: **248 GB/s, 98 % of the memory roof** (201 GB/s, 90 %, on the busy machine). Beyond this, nothing helps except reading fewer bytes.
 - fp16 weights (half the bytes): one core is *slower* in GB/s (42), because converting fp16 to fp32 costs extra instructions. With 8 threads both formats hit the roof, and fp16 then gives **almost 2× the tokens per second**.
 
-**Translated to real models:** at ~180 GB/s, a 4-billion-parameter fp16 model (8 GB) would run at ≈22 tok/s on these CPU cores, and a 4-bit version (2.25 GB) at up to ≈79. The same formula explains the ANE's 11.3 tok/s (90 GB/s) and the GPU's 40 tok/s in the R4 work.
+**Translated to real models:** at the measured ~244 GB/s for fp16, a 4-billion-parameter fp16 model (8 GB) would run at ≈30 tok/s on these CPU cores, and a 4-bit version (2.25 GB) at up to ≈108. The same formula explains the ANE's 11.3 tok/s (90 GB/s) and the GPU's 40 tok/s in the R4 work.
 
 ---
 
@@ -196,7 +218,7 @@ objdump -d --no-show-raw-insn labs/build/p1_peak | awk '/fma_chains_f32ILi1EE.*>
 - **Block size:** with a few outliers (very large weights), 4-bit error is **0.13 with blocks of 32, but 0.69 with blocks of 4096**. One giant weight sets its block's scale and squashes every neighbour toward zero. Small blocks contain the damage, at a cost of 0.5 extra bits per weight. That's why llama.cpp uses 32.
 - **SmoothQuant** (8-bit weights *and* 8-bit activations): real models have a few input channels with huge values. With one scale for the whole activation tensor, those channels take all the levels. Moving that range into the weights cuts the error from **0.069 to 0.016**.
 - **AWQ-style scaling** (4-bit weights only): give important channels more of the 4-bit grid before rounding. Error falls from **0.099 to 0.047** at α = 0.25. Too much scaling makes it worse again; AWQ searches for the best value per layer.
-- **Speed** (7 threads): Q8_0 is **1.65×** faster than fp16 (bytes predict 1.88×); Q4_0 is **2.31×** (bytes predict 3.56×). Q4 falls short because unpacking two 4-bit numbers from each byte costs instructions. Even at 8 threads it moves only 126 GB/s against a ~220 GB/s roof. **4-bit decode on these cores is limited by instructions.** That's the argument for a custom "unpack and dot product" instruction in P6.
+- **Speed** (10 threads, quiet): Q8_0 is **1.88×** faster than fp16, *exactly* the byte-ratio prediction. Q4_0 is **2.76×** (bytes predict 3.56×) and moves only 187 GB/s against fp16's 241. Q4 falls short because unpacking two 4-bit numbers from each byte costs instructions. (Busy machine, 7 threads: 1.65× and 2.31×.) **4-bit decode on these cores is limited by instructions.** That's the argument for a custom "unpack and dot product" instruction in P6.
 - **One core:** Q8_0 is 2.5× faster than fp16. The `sdot` instruction does 16 small multiply-adds at once, so smaller numbers mean cheaper maths too, not just fewer bytes.
 
 **What's missing.** "Good enough" can't be judged from random weights. It needs perplexity on fixed text and the R3 30-case task set, on a real model, with the acceptable loss **written down before** the run. GPTQ is also not built yet (planned in NumPy on one real layer).
@@ -229,22 +251,24 @@ The lab only sends ordinary `Generate` calls and writes nothing inside gRPC_llm.
 
 **Step 2, measure.** Each prompt starts with a unique line so that no cache can help, which makes the measurement fair. The newer gRPC_llm server reports exact token counts and its own timings in a `Usage` message; the lab prints both client and server numbers.
 
-| | Decode | % of ceiling | Prefill | % of ceiling |
-| --- | ---: | ---: | ---: | ---: |
-| 14B, llama.cpp/Metal | 31.5 tok/s | 66 % | 330 tok/s | 70 % |
-| 3B, MLX/Metal | 125–135 tok/s | 53–57 % | 1,236–1,691 tok/s | 54–75 % |
+| | Decode | % of ceiling | Prefill | % of ceiling | Busy GPU (decode) |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| 14B, llama.cpp/Metal | **35.3 tok/s** (5 runs within ±1 %) | 74 % | 339 tok/s | 71 % | 9–31 tok/s |
+| 3B, MLX/Metal | **150 tok/s** | 64 % | 1,157 tok/s | 51 % | 101–135 tok/s |
+
+**Over a minute of continuous use** (`--llm-seconds 60`), the 14B tier slowed **smoothly from 34.8 to 26.5 tok/s (76 %)**, with every request independent. A steady slide like that is the signature of the GPU settling from a short boost to a level it can sustain on power or temperature, not of a software effect. gRPC_llm's own 5-minute log fits: it started at 24.9 tok/s (already settled) and kept 96 %. The 3B tier dipped to ≈130 and recovered to ≈145 (≈90 %). **So quote two numbers for a model: burst and sustained.** A power measurement (`make llm-bench POWER=1` in gRPC_llm) shows whether GPU watts fall along with the speed.
 
 **Step 3, explain the gap.**
 - 410 GB/s is a peak. GPUs usually sustain 70–90 % of it on a pure stream.
 - Each token also reads the KV cache and runs attention, normalisation and sampling.
 - **Fixed costs per token** (launching GPU work, Python in the engine, streaming over gRPC) weigh more on the small model: its token takes ~8 ms, so 1 ms of overhead is 12 %. Client and server decode rates agree within ~1 tok/s, so gRPC itself adds almost nothing.
-- **The GPU was shared.** It was 47–86 % busy before any request, and in one run the 14B model swung between 28 and 9 tok/s. The lab now checks GPU load first and refuses to fit a cost model from unstable runs.
+- **When the GPU is shared, everything moves.** On the busy machine (GPU 47–86 % busy with Unreal), the 14B model swung between 28 and 9 tok/s from one run to the next. The lab now checks GPU load first and refuses to fit a cost model from unstable runs.
 
 **Two findings about gRPC_llm itself:**
 1. **Prefix caching differs by engine.** Sending the same 1,851-token prompt twice: llama.cpp answered the repeat in **0.05 s instead of 5.7 s**, because it reused the cached prompt. MLX took 1.4 s both times; the server confirms **0 of 1,865 prompt tokens reused**. Agent loops that resend a long system prompt pay the full prompt cost on every turn on the MLX tier. That is an improvement worth making there.
 2. **The same model on a CPU in Docker** (from gRPC_llm's earlier logs: Qwen2.5-3B Q5_K_M): 39 tok/s decode and 131 tok/s prefill, against **91 and 1,529** on Metal. Decode drops 2.3× (CPU bandwidth instead of GPU bandwidth); prefill drops **12×** (CPU maths instead of GPU maths). That's the decode/prefill split from Lab 4, on a real service.
 
-**Cost model.** When two tiers give stable numbers, the lab fits *time per token = bytes ÷ B + c* (the same per-byte + fixed-cost model as the ANE R1 work) and rejects impossible fits (c < 0 or B above the spec). A stable run gave **B ≈ 265 GB/s** (about 65 % of the 410 GB/s spec actually used for streaming) and **c ≈ 1.7 ms** of fixed cost per token. That c is 6 % of a 14B token but 21 % of a 3B token, which is why the small model sits further below its ceiling. Caveats: two engines, a busy GPU. An earlier, unstable run produced a negative c and was rejected. Validating the model means predicting a *third* model, then checking.
+**Cost model.** When two tiers give stable numbers, the lab fits *time per token = bytes ÷ B + c* (the same per-byte + fixed-cost model as the ANE R1 work) and rejects impossible fits (c < 0 or B above the spec). The quiet run gave **B ≈ 314 GB/s** (77 % of the 410 GB/s spec is actually usable for streaming) and **c ≈ 1.1 ms** of fixed cost per token. That c is 4 % of a 14B token (28 ms) but 17 % of a 3B token (6.7 ms), which is why the small model sits further below its ceiling. Caveat: two engines. The busy-GPU run gave B ≈ 265, c ≈ 1.7 ms, and an earlier unstable run produced a negative c, which was rejected. Validating the model means predicting a *third* model, then checking.
 
 ---
 
@@ -259,16 +283,18 @@ The lab only sends ordinary `Generate` calls and writes nothing inside gRPC_llm.
 | | macOS native | Linux in Docker's VM |
 | --- | ---: | ---: |
 | Memory page size | 16 KB | 4 KB |
-| Memory bandwidth (best) | 190 GB/s | 132 GB/s |
-| GEMV (best) | 86 GB/s | 64 GB/s |
-| int8 dot product, one core | 126 GOP/s | 121 GOP/s |
+| Memory bandwidth, triad (best) | 249 GB/s | 206 GB/s (−17 %) |
+| GEMV (best) | 134 GB/s | 84 GB/s (−37 %) |
+| int8 dot product, one core | 129 GOP/s | 129 GOP/s (identical) |
 | CPU features visible | NEON, dotprod, i8mm, bf16, **SME** | NEON, dotprod, i8mm, bf16, *no SME* |
 
-**Why.** The maths is identical (same cores). The **memory path** is 30 % slower in the VM: 4 KB pages mean four times as many address translations as 16 KB pages, and a virtual machine adds a second translation layer on top. The VM also hides SME (so no Accelerate-style matrix unit), Metal (no GPU) and the Neural Engine. That's why gRPC_llm's Docker tier runs on the CPU only.
+(Quiet machine. On the busy machine the gap was 190 vs 132 GB/s: the VM suffers more from noisy neighbours.)
+
+**Why.** The maths is identical (same cores). The **memory path** is slower in the VM: 4 KB pages mean four times as many address translations as 16 KB pages, and a virtual machine adds a second translation layer on top. The VM also hides SME (so no Accelerate-style matrix unit), Metal (no GPU) and the Neural Engine. That's why gRPC_llm's Docker tier runs on the CPU only.
 
 **x86 too (correctness only).** `arch -x86_64` runs the AVX2 build through Rosetta: the results are correct (the int8 check passes) and the program sees 4 KB pages, but the timings are emulation, not x86 hardware. For real x86 numbers, see [other-chips.md](other-chips.md).
 
-**Lesson inside the code.** This program creates threads for every layer, so with many threads its GEMV stalls (86 GB/s), while `p1_gemv`, which keeps a pool of threads alive, reaches 200 GB/s. Creating threads is not free.
+**Lesson inside the code.** This program creates threads for every layer, so its GEMV stalls at 134 GB/s and gets *worse* with 14 threads (112), while `p1_gemv`, which keeps a pool of threads alive, reaches 248 GB/s. Creating threads is not free, and the VM's thread creation is more expensive still (84 → 39 GB/s from 4 to 14 threads).
 
 ---
 
@@ -298,13 +324,13 @@ Any program sits somewhere on this chart. **On the slope:** memory-bound, so onl
 | GPTQ, perplexity, task-accuracy gate for Q8/Q4 | "Is it good enough?" | P2 next slice, on Qwen3-0.6B |
 | llama.cpp profiling (P3 proper) | Op-level time breakdown, thread scaling | Build pinned llama.cpp, `llama-bench`, Instruments Time Profiler |
 | IREE, RISC-V, runtime, CI harness (P4–P7) | See the interview plan | Order: P5 → P4 → P6 → P7 |
-| Quiet-machine numbers | All results here were taken with Rider, Unreal and a busy GPU | Rerun with those closed before quoting |
+| Power and energy per token | Tokens per joule; whether the 14B slowdown follows GPU watts | `make llm-bench POWER=1 PORT=50051` (and `50061`) in gRPC_llm, in your own Terminal (needs sudo) |
 
 ## Exercises
 
-1. Close Rider and Unreal, then run `python3 labs/run_labs.py --seconds 2`. Which predictions moved closer?
+1. Open a heavy app (a game engine, a video export) and rerun `python3 labs/run_labs.py --quick`. Compare with [results-2026-10-12.md](results-2026-10-12.md): which numbers move, and which never do?
 2. `labs/build/p1_bandwidth --part threads --threads 1,2,3,4,5,6,7,8`: does the 6th thread (the second P-group) help?
-3. `labs/build/p1_gemm --part steps --n 2048`: does cache blocking finally beat the simple loop swap?
+3. `labs/build/p1_gemm --part steps --n 2048` showed plain blocking losing to the loop swap. Try tile sizes 32 and 128 in `gemm::blocked`: can any tile size win on this chip?
 4. Give `gemv::f32` 8 accumulators: does one core reach the predicted ~72 GB/s?
 5. Process 4 blocks per loop in `dot_q4_0_neon`: does single-core Q4 catch up with Q8?
 6. Run the `llm` lab twice without changing anything. How different are the medians? That difference is the noise any "optimisation" must beat (P7).

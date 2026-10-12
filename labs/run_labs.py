@@ -175,8 +175,9 @@ def explain_peak(j: pathlib.Path, ceil: dict) -> None:
         lines.append(f"1 chain: {ch[1]:.1f} GFLOP/s; {int(best_c)} chains: {ch[best_c]:.1f} GFLOP/s "
                      f"({ch[best_c] / ch[1]:.0f}x). Same instructions, same core: only the dependencies changed.")
     if clk:
-        lines.append(f"Inferred clock ≈ {clk[0]['ghz']:.2f} GHz (assumes 4-cycle FMA latency). "
-                     "Every other lab's 'per cycle' reasoning uses this number.")
+        ceil["fma_per_ns"] = clk[0]["ghz"] / clk[0]["assumed_latency"]
+        lines.append(f"If FMA latency is 4 cycles, the clock is ≈ {clk[0]['ghz']:.2f} GHz. That rests on an "
+                     "assumption; the latency lab cross-checks it with a second, independent estimate.")
     if f16 and ch:
         lines.append(f"fp16 peak {f16[0]['median']:.0f} vs fp32 {max(ch.values()):.0f} GFLOP/s: "
                      "same instruction rate, twice the lanes per 128-bit register.")
@@ -232,11 +233,22 @@ def explain_latency(j: pathlib.Path, ceil: dict) -> None:
     seq = sorted(records(j, "p1.latency", "sequential"), key=lambda r: r["bytes"])
     if not rnd:
         return
-    ghz = ceil.get("ghz", 0)
     first, last = rnd[0], rnd[-1]
+    ghz = 3 / first["ns"]  # clock from a 3-cycle L1 hit: cycle counts below use this
+    ceil["ghz"] = ghz  # later labs (gemv notes) use this clock, not the FMA-based one
     mid = min(rnd, key=lambda r: abs(r["bytes"] - 2 * 2**20))
     cyc = (lambda ns: f" ≈ {ns * ghz:.{1 if ns * ghz < 10 else 0}f} cycles") if ghz else (lambda ns: "")
-    lines = [
+    lines = []
+    if "fma_per_ns" in ceil:
+        # Two independent clock estimates: L1 load-to-use (assume 3 cycles) and the
+        # 1-chain FMA (assume 4 cycles). If they disagree, one assumption is wrong.
+        ghz_l1 = 3 / first["ns"]
+        fma_cycles = ghz_l1 / ceil["fma_per_ns"]
+        ceil["fma_cycles"] = fma_cycles
+        lines.append(f"Clock cross-check: a 3-cycle L1 hit in {first['ns']:.2f} ns means {ghz_l1:.2f} GHz. At that clock "
+                     f"the 1-chain FMA takes {fma_cycles:.1f} cycles, not the assumed 4. Two assumptions, one of them "
+                     "wrong: hardware cycle counters (Instruments) would settle which.")
+    lines += [
         f"L1 hit {first['ns']:.2f} ns{cyc(first['ns'])}; L2 (2 MiB) {mid['ns']:.1f} ns{cyc(mid['ns'])}; "
         f"DRAM {last['ns']:.0f} ns{cyc(last['ns'])}.",
         f"A DRAM miss costs ~{last['ns'] / first['ns']:.0f} L1 hits. Kernels win by reusing data in cache "
@@ -288,11 +300,12 @@ def explain_gemv(j: pathlib.Path, ceil: dict) -> None:
         one = [r for r in f32 if r["threads"] == 1]
         if one:
             ghz = ceil.get("ghz", 4.5)
-            lim = 4 * ghz * 4  # 4 accumulator chains x 4 lanes, one FMA per chain per 4-cycle latency
-            lines.append(f"1 thread: {one[0]['median']:.0f} GB/s. The kernel has 4 accumulator chains of 4 lanes; with "
-                         f"4-cycle FMA latency that is at most 4 lanes x {ghz:.1f} GHz = {lim / 4:.0f} G weights/s "
-                         f"= {lim:.0f} GB/s of fp32 per core. The single-thread number is an instruction-latency "
-                         "limit, not DRAM. Try 8 accumulators and measure again.")
+            lat = ceil.get("fma_cycles", 4.0)  # measured by the peak/latency cross-check when available
+            wps = 4 * 4 / lat * ghz  # 4 accumulator chains x 4 lanes, one FMA per chain per latency
+            lines.append(f"1 thread: {one[0]['median']:.0f} GB/s. The kernel has 4 accumulator chains of 4 lanes; with a "
+                         f"{lat:.1f}-cycle FMA at {ghz:.2f} GHz that is at most {wps:.0f} G weights/s = {4 * wps:.0f} GB/s "
+                         "of fp32 per core. The single-thread number is an instruction-latency limit, not DRAM. "
+                         "Try 8 accumulators and measure again.")
     if f16:
         b16 = max(f16, key=lambda r: r["median"])
         g16 = b16["median"]

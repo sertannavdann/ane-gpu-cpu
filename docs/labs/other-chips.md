@@ -22,7 +22,7 @@ Facts marked *(spec)* are vendor figures; *(measured)* means this repo measured 
 | **Cache line** | 128 bytes *(measured)* | 64 bytes | 64 bytes | 64 bytes | you choose (bus width) |
 | **Memory page** | 16 KB *(measured)* | 4 KB (64 KB optional) | 4 KB | 4 KB (2 MB "large pages" on request) | none (physical addresses) |
 | **Memory** | unified: CPU, GPU and NPU share one RAM | CPU RAM; a GPU, if any, is separate | unified LPDDR5X | CPU RAM, plus a **separate** GPU with its own VRAM over PCIe | off-chip DDR or HBM, plus on-chip block RAM |
-| **Bandwidth** | 410 GB/s *(spec)*; CPU cores reach ~224 *(measured)* | Pi 5 ~17; Graviton3 ~300 *(approx.)* | ~135 GB/s *(spec, X Elite)* | desktop dual-channel DDR5 ~80–100; servers 300–500+ *(approx.)* | DDR boards tens of GB/s; HBM boards ~460 *(spec, e.g. Alveo U280)* |
+| **Bandwidth** | 410 GB/s *(spec)*; CPU cores reach ~253 *(measured)* | Pi 5 ~17; Graviton3 ~300 *(approx.)* | ~135 GB/s *(spec, X Elite)* | desktop dual-channel DDR5 ~80–100; servers 300–500+ *(approx.)* | DDR boards tens of GB/s; HBM boards ~460 *(spec, e.g. Alveo U280)* |
 | **NPU** | Neural Engine (Core ML; private APIs in the R-series) | usually none | Hexagon NPU (QNN SDK, ONNX Runtime QNN) | Intel NPU (OpenVINO), AMD XDNA (Ryzen AI) on laptops | the FPGA *is* the accelerator |
 | **Choosing which core a thread runs on** | **not possible**; only a hint (QoS class) | yes: `taskset`, `pthread_setaffinity_np`, `numactl` | yes: `SetThreadAffinityMask`, CPU Sets | yes (same APIs as left); NUMA matters on servers | no threads: hardware runs in parallel by design |
 | **Two threads per core (SMT)** | no | no (most Arm) | no | **yes, usually 2** | n/a |
@@ -36,9 +36,9 @@ Facts marked *(spec)* are vendor figures; *(measured)* means this repo measured 
 
 **You cannot pin threads.** Linux and Windows let you say "run this thread on core 3". macOS only lets you hint how important a thread is (its QoS class): `USER_INTERACTIVE` may use performance cores, `BACKGROUND` stays on efficiency cores. The labs use that hint (`labs/common/pool.h`). It's also why the barrier effect in the `peak` lab is hard to control on a Mac: you can't keep your threads away from Rider's core.
 
-**Big cache lines and pages.** 128-byte cache lines mean "false sharing" (two threads writing data that sit in the same line) happens at a 128-byte distance, not 64. That's why the bandwidth lab spaces per-thread results 128 bytes apart. 16 KB pages mean four times fewer address translations than 4 KB pages; the `portable` lab measured macOS streaming **190 GB/s against 132 GB/s** for Linux on the same chip (part of that is the VM, see below).
+**Big cache lines and pages.** 128-byte cache lines mean "false sharing" (two threads writing data that sit in the same line) happens at a 128-byte distance, not 64. That's why the bandwidth lab spaces per-thread results 128 bytes apart. 16 KB pages mean four times fewer address translations than 4 KB pages; the `portable` lab measured macOS streaming **249 GB/s against 206 GB/s** for Linux on the same chip (part of that is the VM, see below).
 
-**Hidden engines.** Accelerate's matrix multiply ran at ≈2.9 TFLOP/s (measured) because it uses the SME matrix unit. Plain NEON code peaks near 0.5–0.8 TFLOP/s on all cores. The Neural Engine is reachable officially only through Core ML. Many speeds on a Mac therefore depend on *which library* you call, not on how good your code is.
+**Hidden engines.** Accelerate's matrix multiply ran at ≈3.0–3.2 TFLOP/s (measured) because it uses the SME matrix unit. Plain NEON code peaks at ≈1.15 TFLOP/s on all 10 P-cores (measured, quiet machine). The Neural Engine is reachable officially only through Core ML. Many speeds on a Mac therefore depend on *which library* you call, not on how good your code is.
 
 **No `perf`.** The interview plan's `perf stat -M TopdownL1` doesn't exist on macOS. Instruments (CPU Counters template, or `xctrace` on the command line) is the replacement; `powermetrics` (needs sudo) gives power per CPU, GPU and ANE.
 
@@ -48,16 +48,17 @@ Facts marked *(spec)* are vendor figures; *(measured)* means this repo measured 
 
 **Same instruction set, different system.** NEON code (all of `labs/p1`, `labs/p2`) is valid on any ARMv8.2+ Linux machine. What breaks is the Apple-only plumbing: `sysctl` names, QoS classes and Accelerate. `labs/portable/portable_lab.cpp` avoids all three and runs there unchanged.
 
-**Measured on this Mac, in Docker's Linux arm64 VM** (`bash labs/portable/compare_native_vs_linux.sh`):
+**Measured on this Mac, in Docker's Linux arm64 VM** (`bash labs/portable/compare_native_vs_linux.sh`, quiet machine):
 
 | | macOS | Linux VM |
 | --- | ---: | ---: |
-| bandwidth | 190 GB/s | 132 GB/s |
-| int8 maths | 126 GOP/s | 121 GOP/s |
+| bandwidth (triad) | 249 GB/s | 206 GB/s |
+| GEMV, threads created per layer | 134 GB/s | 84 GB/s |
+| int8 maths | 129 GOP/s | 129 GOP/s |
 | page size | 16 KB | 4 KB |
 | SME, Metal, Neural Engine | available | **hidden** |
 
-The maths is equal; memory is ~30 % slower. Two reasons: 4 KB pages need more translations, and a VM translates every address twice (guest, then host). This is why gRPC_llm's Docker tier is CPU-only and much slower than its Metal tiers (39 vs 91 tok/s decode for the same 3B model, from gRPC_llm's logs).
+The maths is identical; memory is 17 % slower, and code that creates many threads suffers most (−37 %). Two reasons: 4 KB pages need more translations, and a VM translates every address twice (guest, then host). This is why gRPC_llm's Docker tier is CPU-only and much slower than its Metal tiers (39 vs 91 tok/s decode for the same 3B model, from gRPC_llm's logs).
 
 **On a real ARM64 server** you gain `perf stat`, thread pinning and often more memory channels. Some chips also have **SVE**, a vector extension whose width isn't fixed in the code: the same binary runs on 128-bit or 256-bit hardware. That is the same idea as RISC-V's vectors (section 6).
 

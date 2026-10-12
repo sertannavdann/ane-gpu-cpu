@@ -19,7 +19,7 @@ I put a 4B background model on the Apple Neural Engine (ANE) next to an interact
 
 ### Numbers to check before quoting
 
-- **Bandwidth share.** The R1 record calls 89 GB/s "about one sixth of the M4 Max DRAM bandwidth", which implies ≈540 GB/s. That is the 16-core M4 Max figure. This machine is the 14-core, 36 GB bin, and Apple specifies about 410 GB/s for it, so the share is closer to **one fifth**. P1's bandwidth probe settles it, and both documents should then be corrected.
+- **Bandwidth share (settled by P1, 2026-10-12).** The R1 record calls 89 GB/s "about one sixth of the M4 Max DRAM bandwidth", which implies ≈540 GB/s, the 16-core M4 Max figure. This machine is the 14-core, 36 GB bin, specified at about 410 GB/s, so the ANE's share is **≈22 %**. Measured context from the P1 labs on a quiet machine: one CPU core streams **90 GB/s**, the same as the ANE; all CPU cores reach 253 GB/s (62 % of spec); and the GPU tiers of gRPC_llm imply ≈314 GB/s of usable streaming (cost-model fit, [results](labs/results-2026-10-12.md)). One-line version: **"the ANE got one CPU core's worth of bandwidth; the GPU got three and a half."**
 - **Bytes per token.** 70 % of an ≈88 ms token at 90 GB/s means ≈5.6 GB streamed per token [D]. Reconcile this with the model's actual fp16 parameter bytes on the ANE side of the hybrid split before stating a GPU effective bandwidth.
 - **GPU prefill "close to free"** is inferred from latency arithmetic, not from a measured TTFT split for the background model [H].
 
