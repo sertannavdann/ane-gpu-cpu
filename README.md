@@ -16,3 +16,9 @@ Run outputs (`results/`), model caches, downloaded weights and fixtures, the vir
 ## Status
 
 Research code, not a product. Measurements are local to one M4 Max running macOS 26.5 and depend on private ANE runtime interfaces that may change.
+
+## License
+
+Released under the [MIT License](LICENSE). You may use, modify and redistribute this work, including commercially, provided the copyright notice and licence text are kept, crediting Sertan Avdan. If you use this work in research, please cite this repository.
+
+Third-party material is listed in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
