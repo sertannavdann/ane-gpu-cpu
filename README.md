@@ -8,6 +8,7 @@ Research prototype for running transformer work on the Apple Neural Engine (ANE)
 - `prototype/` — scheduler prototype, native ANE probes (`prototype/ane/`), R3 model evaluation (`prototype/ane/r3/`) and R4 concurrent placement (`prototype/r4/`). Setup notes in [prototype/README.md](prototype/README.md).
 - `experiments/ane-latent/` — the isolated L-series experiment on activation-aware FFN down-projection factorization. See its [README](experiments/ane-latent/README.md) and [current state](experiments/ane-latent/CURRENT-STATE.md).
 - `tests/` — unit tests; hardware tests skip when the native build is absent.
+- `labs/` and `docs/labs/` — P-series hardware labs (compute and memory ceilings, GEMM/GEMV, quantization) with a runner: `python3 labs/run_labs.py --quick`. Plan in [docs/p-series-plan.md](docs/p-series-plan.md).
 
 ## Not included
 
