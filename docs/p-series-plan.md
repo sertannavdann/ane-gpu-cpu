@@ -115,7 +115,7 @@ labs/portable/             portable_lab.cpp (NEON / AVX2 / scalar) + macOS-vs-Li
 results/labs-<time>/       gitignored run outputs: summary.md, records.jsonl, console.log, env.json
 ```
 
-Status 2026-10-12: P1, P2 (accuracy and speed parts), P7 v0 (harness + predict/measure tables), a first P3 slice against gRPC_llm, and a portable cross-platform lab are built and run. Still open in P1/P2: hardware counters via `xctrace`, GPTQ on a real layer, perplexity and fixture evaluation of Q8/Q4 on Qwen3-0.6B. P3 has its first slice (service-level); the CPU llama.cpp profile is next. P4–P8 are not started.
+Status 2026-10-12: P1, P2 (accuracy and speed parts), P7 v0 (harness + predict/measure tables), a first P3 slice against gRPC_llm, and a portable cross-platform lab are built and run. Still open in P1/P2: hardware counters via `xctrace`, GPTQ on a real layer, perplexity and fixture evaluation of Q8/Q4 on Qwen3-0.6B. P3 has two slices: the gRPC_llm service lab and the pinned CPU llama.cpp build (`b11562`) with a 4-format × 1–10-thread bench ([results](labs/results-p3-llamacpp-2026-10-12.md)). Next in P3: a time profile, one measured modification, and perplexity per format. P4–P8 are not started.
 
 ## Open decisions for the owner
 

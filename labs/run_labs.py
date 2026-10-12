@@ -7,6 +7,7 @@ Examples
   python3 labs/run_labs.py --only gemv,quant --watch --interval 0.25
   python3 labs/run_labs.py --soak 60               # 60 s sustained load, one line per second
   python3 labs/run_labs.py --only llm              # predict + measure the running gRPC_llm tiers
+  python3 labs/run_labs.py --only llamacpp         # pinned llama.cpp on the CPU, 4 formats x threads
 
 Each lab is a standalone binary in labs/build/ and can be run directly; this
 script adds the order (ceilings measured first and fed to later labs), the
@@ -32,7 +33,7 @@ HERE = pathlib.Path(__file__).resolve().parent
 ROOT = HERE.parent
 BUILD = HERE / "build"
 LABS = ["peak", "bandwidth", "latency", "gemm", "gemv", "quant"]
-OPT_IN = ["llm"]  # needs the gRPC_llm services running; only with --only llm
+OPT_IN = ["llm", "llamacpp"]  # llm: gRPC_llm tiers running; llamacpp: labs/p3 build + models
 GRPC_LLM = pathlib.Path.home() / "Documents" / "Documents - Sertan’s MacBook Pro" / "Software" / "AI" / "gRPC_llm"
 BINARY = {"peak": "p1_peak", "bandwidth": "p1_bandwidth", "latency": "p1_latency", "gemm": "p1_gemm",
           "gemv": "p1_gemv", "quant": "p2_quant"}
@@ -527,6 +528,10 @@ def main() -> None:
     for name in only:
         if name == "llm":
             run_llm(a, jpath, ceil, log)
+            continue
+        if name == "llamacpp":
+            args = ["--json", str(jpath)] + (["--bw", f"{ceil['bw']:.0f}"] if "bw" in ceil else [])
+            run_lab(name, args, log, cmd=[sys.executable, str(HERE / "p3" / "llama_bench_lab.py")])
             continue
         extra = list(quick[name]) if a.quick else []
         if name in ("gemv", "quant"):

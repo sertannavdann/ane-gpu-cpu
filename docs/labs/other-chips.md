@@ -8,6 +8,8 @@ The labs run on an Apple M4 Max. The *ideas* (dependency chains, cache levels, b
 - an **FPGA**;
 - **RISC-V**, the target of P5 and P6.
 
+Abbreviations (SIMD, NEON, AVX, SME, NPU, NUMA, SMT, VNNI, RVV…) are explained in plain words in the [glossary](glossary.md).
+
 Facts marked *(spec)* are vendor figures; *(measured)* means this repo measured it; *(approx.)* means a typical value to check on the real machine.
 
 ---

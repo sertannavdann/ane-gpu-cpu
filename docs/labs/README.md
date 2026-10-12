@@ -8,6 +8,8 @@ These labs answer one question from many angles: **what limits how fast a comput
 
 How the labs differ on other chips (generic ARM64, Qualcomm, x86/Windows, FPGA) is covered in **[other-chips.md](other-chips.md)**.
 
+**Reading without running anything works too.** Every section explains what the code does, what it printed on this Mac, and why. Every abbreviation and technical term (CPU, GPU, FLOP, GEMV, KV cache, Q4_K_M and so on) is explained in plain words in the **[glossary](glossary.md)**. Terms are also spelled out the first time they appear below.
+
 ---
 
 ## Start here: 60 seconds
@@ -17,7 +19,7 @@ cd "../ANE-GPU-CPU-p-series"            # the p-series worktree
 python3 labs/run_labs.py --quick         # all CPU labs, about 35 seconds
 ```
 
-It prints a **prediction** before each lab, the lab's own output, a **predicted vs measured** table, and a short **"What to notice"** explaining the result. Everything is saved to `results/labs-<time>/` (`summary.md` holds the table and a roofline chart).
+It builds the C++ labs, runs the correctness tests, then prints a **prediction** before each lab, the lab's own output, a **predicted vs measured** table, and a short **"What to notice"** explaining the result. Everything is saved to `results/labs-<time>/` (`summary.md` holds the table and a roofline chart).
 
 | Recipe | What it does | Time |
 | --- | --- | --- |
@@ -48,6 +50,8 @@ It prints a **prediction** before each lab, the lab's own output, a **predicted 
                                │
                    36 GB unified memory, ~410 GB/s on paper
 ```
+
+Reading the picture: **CPU** = central processing unit (the general-purpose cores); **P-** and **E-cores** = performance and efficiency cores; **L1, L2** = level-1 and level-2 caches, small fast memories next to the cores; **SLC** = system-level cache, shared by the whole chip; **GPU** = graphics processing unit; **Neural Engine (ANE)** = Apple's AI accelerator; **GB/s** = gigabytes per second, the rate data can flow.
 
 **Unified memory** means the CPU, GPU and Neural Engine all read the *same* RAM. There is no separate graphics card with its own memory. That's why a 9 GB model can run on the GPU without being copied, and also why every chip on the SoC competes for the same bandwidth.
 
@@ -83,6 +87,8 @@ The rest of this guide explains each row: why the guess was right, or why it mis
 **In one sentence:** a core can start several multiply-adds every clock tick, but only if they don't wait on each other.
 
 **Interview questions it answers:** "Your kernel runs at 30 % of peak, why?" [A] · "What's a register-blocked micro-kernel and why does it exist?" [A] · "Why does scaling stop at 8 cores?" [A][R]
+
+**Words first.** A **FLOP** is one floating-point (decimal-number) addition or multiplication; **GFLOP/s** = billions per second. An **FMA** (fused multiply-add) computes `a × b + c` in one instruction. **NEON** is the ARM instruction family that does 4 such operations at once on a 128-bit **register** (the core's tiny working storage). A **cycle** is one clock tick (0.22 ns at 4.5 GHz).
 
 **Picture it.** A multiply-add (FMA) is like a dishwasher cycle: it takes 4 minutes (cycles), but the kitchen has 4 dishwashers. If each load needs the previous load's clean plates, you use one machine and wait 4 minutes each time. If you have 16 independent loads, all 4 machines run constantly and a load finishes every quarter-minute: **16× more work from the same kitchen.**
 
@@ -158,6 +164,8 @@ objdump -d --no-show-raw-insn labs/build/p1_peak | awk '/fma_chains_f32ILi1EE.*>
 
 ## Lab 4: `gemm`, multiplying matrices from scratch
 
+**Words first.** **GEMM** = general matrix-matrix multiply (many tokens at once, as when reading a prompt). **M × K · K × N** are the matrix sizes: M tokens, K inputs, N outputs. **Prefill** = processing the prompt; **decode** = generating the answer one token at a time. **SME** = Apple's matrix unit (Scalable Matrix Extension).
+
 **In one sentence:** the same multiplication gets **~2,000×** faster through access order, vector instructions in a register-blocked micro-kernel, threads, and finally Apple's matrix unit.
 
 **Interview questions it answers:** "How do you choose tile sizes?" [A] · "Why is decode memory-bound and prefill compute-bound?" [A][R] · "What does a batch of 8 change?" [A]
@@ -184,6 +192,8 @@ objdump -d --no-show-raw-insn labs/build/p1_peak | awk '/fma_chains_f32ILi1EE.*>
 ---
 
 ## Lab 5: `gemv`, generating a token is a bandwidth problem
+
+**Words first.** **GEMV** = general matrix-vector multiply: one token times a weight matrix, which is what each generated token needs. **tok/s** = tokens per second. **fp32 / fp16** = 32- and 16-bit decimal numbers.
 
 **In one sentence:** tokens per second ≈ memory bandwidth ÷ size of the weights.
 
@@ -227,6 +237,8 @@ objdump -d --no-show-raw-insn labs/build/p1_peak | awk '/fma_chains_f32ILi1EE.*>
 ---
 
 ## Lab 7: `llm`, your gRPC_llm project under the microscope
+
+**Words first.** **gRPC** = the network protocol gRPC_llm's services use to talk to each other. **GGUF** and **safetensors** = model file formats. **TTFT** = time to first token. **KV cache** = the model's memory of the conversation so far (key and value vectors per token). **GQA** = grouped-query attention, which shares that memory between heads. **MLX** = Apple's machine-learning framework; **Metal** = Apple's GPU interface.
 
 **In one sentence:** read the model file, predict its speed from bytes and FLOPs, then measure the real server and explain the difference.
 
@@ -293,6 +305,58 @@ How to read it: decode energy follows **bytes moved**, not FLOPs. Both models co
 
 ---
 
+## Lab 7b: `llamacpp`, a real inference engine on the CPU (P3)
+
+**Words first.** **llama.cpp** is the most widely used open-source engine for running language models on ordinary computers; **ggml** is its maths library. **llama-bench** is its speed test: **pp512** = prefill of a 512-token prompt, **tg128** = generating 128 tokens. **Pinned** means fixed to one exact version (`b11562`, commit `b2f036c`), so the numbers can be reproduced. **Q8_0 / Q4_K_M / Q4_0 / F16** are file formats with about 8, 5, 4.8 and 16 bits per weight (see the [glossary](glossary.md#6-making-models-smaller-quantization)). **i8mm** is an ARM instruction that multiplies small blocks of 8-bit numbers.
+
+**In one sentence:** the same 1.5-billion-parameter model, in four formats and on 1–10 CPU threads, shows decode hitting the memory wall and prefill scaling with cores, exactly as the earlier labs predict.
+
+**Interview questions it answers:** "How close does llama.cpp get to the hardware bound?" [A] · "Why does decode stop scaling past N threads, while prefill keeps scaling?" [A][R] · "Q4 vs Q8 vs F16 on a CPU?" [A][R]
+
+**Set up once** (≈1 minute plus a 3.6 GB download):
+```bash
+bash labs/p3/vendor_llama.sh     # clone + build llama.cpp b11562, CPU only (Metal, BLAS, Accelerate off)
+bash labs/p3/models.sh           # Qwen2.5-1.5B F16 download, then Q8_0 / Q4_K_M / Q4_0 made from it
+python3 labs/run_labs.py --only llamacpp     # or: python3 labs/p3/llama_bench_lab.py   (~7 minutes)
+```
+Why CPU only: the question is how good llama.cpp's *own* CPU code is, so nothing is handed to the GPU or to Apple's matrix library.
+
+**Predict** (from the files and the P1 limits: one core streams 90 GB/s, all cores 253 GB/s, one core does 270 fp16 GFLOP/s):
+
+| Format | Bytes read per token | Decode, 1 thread | Decode limit (all cores) | Threads where decode should stop scaling |
+| --- | ---: | ---: | ---: | ---: |
+| F16 | 3.09 GB | 29 tok/s | 82 tok/s | ~3 |
+| Q8_0 | 1.64 GB | 55 tok/s | 154 tok/s | ~3 |
+| Q4_K_M | 0.98 GB | 92 tok/s | 258 tok/s | ~3 |
+| Q4_0 | 0.93 GB | 97 tok/s | 272 tok/s | ~3 |
+
+**Measure** (quiet machine; full output in [results-p3-llamacpp-2026-10-12.md](results-p3-llamacpp-2026-10-12.md)):
+
+| Decode, tok/s | 1T | 2T | 4T | 6T | 8T | 10T | best vs limit | effective GB/s |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| F16 | 22.6 | 37.7 | 65.3 | 72.3 | 73.5 | 73.1 | **90 %** | 227 |
+| Q8_0 | 44.7 | 79.4 | 126.0 | 130.6 | 131.6 | 126.1 | **85 %** | 216 |
+| Q4_K_M | 37.2 | 69.1 | 120.3 | 149.3 | 164.0 | 177.0 | 69 % | 173 |
+| Q4_0 | 42.2 | 79.9 | 142.3 | 167.8 | 195.2 | 196.9 | 72 % | 183 |
+
+| Prefill, tok/s | 1T | 2T | 4T | 6T | 8T | 10T |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| F16 | 30 | 59 | 116 | 175 | 223 | 265 |
+| Q8_0 | 111 | 217 | 427 | 623 | 818 | 941 |
+| Q4_K_M | 81 | 158 | 313 | 456 | 608 | 690 |
+| Q4_0 | 110 | 215 | 425 | 623 | 826 | 984 |
+
+**Explain.**
+- **Decode stops scaling; prefill doesn't.** F16 and Q8_0 decode flatten after 6–8 threads at 216–227 GB/s, 85–90 % of what the CPU cores can pull from memory. Extra threads only wait for memory. (They flatten later than the predicted ~3 threads, because one thread doesn't quite reach a full core's 90 GB/s.) Prefill grows almost in proportion to threads all the way to 10 (Q8_0: 111 → 941), because each weight fetched is used 512 times, so cores are the limit, not memory. **That is the answer to "why does decode stop scaling past N threads while prefill keeps going".**
+- **4-bit formats are limited by instructions, again.** Q4_0 reaches only 183 GB/s and is still climbing at 10 threads; Q4_K_M only 173. Our own P2 Q4_0 kernel stopped at **187 GB/s** for the same reason: unpacking two 4-bit numbers per byte (and, for K-quants, extra sub-block scales) costs more instructions than moving the bytes. On one thread, Q4 decodes *slower* than Q8_0 (42 vs 45 tok/s) despite reading half the bytes.
+- **Fewer bytes still win overall.** At their best, Q8_0 is 1.79× and Q4_0 2.68× faster than F16 at decode, against byte-ratio predictions of 1.88× and 3.32×. Q8_0 almost reaches its prediction; Q4 loses about a fifth to unpacking.
+- **Prefill beats the fp16 prediction for Q8_0 and Q4_0** (124–129 %). llama.cpp converts each activation row to 8-bit and uses the `i8mm` instruction, which does more multiply-adds per cycle than fp16 FMA. F16 prefill reaches only 35 % of its prediction: without a BLAS library, llama.cpp's F16 path on this CPU is not a tuned matrix kernel. That makes it the obvious place to "change something" in the next P3 slice.
+- **For a CPU deployment on this chip:** Q4_0 is the fastest at both decode and prefill; Q4_K_M usually keeps more quality but costs 10–30 % of the speed here. Quality isn't measured yet: `llama-perplexity` is already built for that.
+
+**Still to do in P3:** a time profile (which operations take the time, via Instruments), one modification measured before and after, and perplexity per format.
+
+---
+
 ## Lab 8: `portable`, same chip, different operating system
 
 **In one sentence:** the same C++ file, run on macOS and on Linux on the *same* M4 Max, shows what the operating system adds or takes away.
@@ -343,7 +407,7 @@ Any program sits somewhere on this chart. **On the slope:** memory-bound, so onl
 | Hardware counters (cycles, IPC, cache misses) | The plan asks for `perf stat`; macOS has no `perf`, and the Docker VM sees no counters | Instruments / `xctrace` CPU Counters wrapper |
 | Real x86 timings | P1, P2 and P5 mention AVX2/AVX-512/VNNI | `portable_lab.cpp` already compiles for x86; run it on an x86 Linux/Windows box |
 | GPTQ, perplexity, task-accuracy gate for Q8/Q4 | "Is it good enough?" | P2 next slice, on Qwen3-0.6B |
-| llama.cpp profiling (P3 proper) | Op-level time breakdown, thread scaling | Build pinned llama.cpp, `llama-bench`, Instruments Time Profiler |
+| llama.cpp profile and one change (rest of P3) | Which operations take the time; a measured before/after | Instruments Time Profiler on `llama-bench`; target: the F16 prefill path |
 | IREE, RISC-V, runtime, CI harness (P4–P7) | See the interview plan | Order: P5 → P4 → P6 → P7 |
 | Reliable 3B energy figure | Its power window was 2.6 s | `make llm-bench POWER=1 PORT=50061 SUSTAIN=120` in gRPC_llm (your own Terminal; needs sudo) |
 | Per-request server logs in gRPC_llm | Would have shown whether another client caused the one-off slowdown | Log request id, queue time and token counts per `Generate` call |
@@ -366,6 +430,35 @@ labs/common/                timing harness, thread pool (QoS → P/E cores), sys
 labs/p1/                    peak, latency, bandwidth, gemm, gemv (+ kernels in *_kernels.h)
 labs/p2/                    Q8_0 / Q4_0 formats and the quant lab
 labs/p3/llm_service_lab.py  gRPC_llm: GGUF/safetensors reader, predictions, gRPC measurement, cost model
+labs/p3/vendor_llama.sh     fetch + build pinned llama.cpp (b11562), CPU only
+labs/p3/models.sh           download Qwen2.5-1.5B F16, quantize to Q8_0 / Q4_K_M / Q4_0
+labs/p3/llama_bench_lab.py  llama.cpp: predict, llama-bench across formats and threads, explain
+labs/cleanup.sh             list / remove every download, build and result
 labs/portable/              one-file portable lab (NEON / AVX2 / scalar) + macOS-vs-Linux script
 labs/tests/                 55 correctness checks, run before every benchmark
+docs/labs/glossary.md       every abbreviation and concept, in plain words
+docs/labs/results-*.md      dated evidence for the numbers quoted in this guide
 ```
+
+---
+
+## Downloads, disk space and cleanup
+
+Nothing here keeps running after a lab finishes. Every lab process exits on its own, and the Docker comparison containers delete themselves (`--rm`). What stays is files on disk:
+
+| What | Size | Where (all gitignored) | Recreate with |
+| --- | ---: | --- | --- |
+| Qwen2.5-1.5B F16 download (3.6 GB) + Q8_0, Q4_K_M, Q4_0 made from it | 7.1 GB | `labs/p3/models.nosync/` | `bash labs/p3/models.sh` |
+| llama.cpp b11562 source (shallow clone) + CPU build | 249 MB | `labs/p3/llama.nosync/` | `bash labs/p3/vendor_llama.sh` |
+| C++ lab binaries | 1.6 MB | `labs/build/` | any `run_labs.py` run |
+| Run outputs | < 1 MB | `results/` | rerun the labs (evidence is copied into [results-2026-10-12.md](results-2026-10-12.md)) |
+
+Nothing else was downloaded. The Docker image used by the portable lab already existed (gRPC_llm's `llm_service` image), and the gRPC_llm models were already on disk. Folders ending in `.nosync` are skipped by iCloud Drive, so the 7 GB of models never sync.
+
+```bash
+bash labs/cleanup.sh                    # list sizes, running lab processes, leftover containers
+bash labs/cleanup.sh --remove models    # free the 7.1 GB of models
+bash labs/cleanup.sh --remove all       # remove every download, build and result
+```
+
+The one thing using memory that the labs did *not* start: gRPC_llm's model servers (the 14B tier holds about 8.4 GB). Stop them with `make llm-down` in gRPC_llm when you don't need them.
