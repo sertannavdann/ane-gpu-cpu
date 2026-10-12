@@ -68,8 +68,9 @@ What the labs measured:
 | 4-bit quantization error (block 32) | 0.0854 | 0.0969 | 0.0969 | quant |
 | Q8_0 decode speedup vs fp16 | 1.88× | **1.88×** | 1.65× | quant |
 | Q4_0 decode speedup vs fp16 | 3.56× | 2.76× | 2.31× | quant |
-| Qwen2.5-14B decode on the GPU | 48 tok/s | **35.3 (74 %)** | 29–31 | llm |
-| Qwen2.5-3B (MLX) decode on the GPU | 236 tok/s | **150 (64 %)** | 121–135 | llm |
+| Qwen2.5-14B decode on the GPU | 48 tok/s | **35.8 (75 %)** | 29–31 | llm |
+| Qwen2.5-3B (MLX) decode on the GPU | 236 tok/s | **157 (67 %)** | 121–135 | llm |
+| 14B energy per generated token | — | **≈1.0 J** (GPU 35.6 W) | — | llm + `powermetrics` |
 
 Notice the pattern: the quiet machine moves *every* multi-core and GPU number up by 10–160 %, while single-core maths and quantization error don't move at all. Noisy neighbours steal shared resources (cores, bandwidth, the GPU), not the arithmetic inside one core.
 
@@ -253,10 +254,30 @@ The lab only sends ordinary `Generate` calls and writes nothing inside gRPC_llm.
 
 | | Decode | % of ceiling | Prefill | % of ceiling | Busy GPU (decode) |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| 14B, llama.cpp/Metal | **35.3 tok/s** (5 runs within ±1 %) | 74 % | 339 tok/s | 71 % | 9–31 tok/s |
-| 3B, MLX/Metal | **150 tok/s** | 64 % | 1,157 tok/s | 51 % | 101–135 tok/s |
+| 14B, llama.cpp/Metal | **35.8 tok/s** (runs within ±1 %) | 75 % | 365 tok/s | 77 % | 9–31 tok/s |
+| 3B, MLX/Metal | **157 tok/s** | 67 % | 1,730 tok/s | 76 % | 101–135 tok/s |
 
-**Over a minute of continuous use** (`--llm-seconds 60`), the 14B tier slowed **smoothly from 34.8 to 26.5 tok/s (76 %)**, with every request independent. A steady slide like that is the signature of the GPU settling from a short boost to a level it can sustain on power or temperature, not of a software effect. gRPC_llm's own 5-minute log fits: it started at 24.9 tok/s (already settled) and kept 96 %. The 3B tier dipped to ≈130 and recovered to ≈145 (≈90 %). **So quote two numbers for a model: burst and sustained.** A power measurement (`make llm-bench POWER=1` in gRPC_llm) shows whether GPU watts fall along with the speed.
+(Final quiet run, 01:23. gRPC_llm's own `make llm-bench` agreed within 3 %: 35.9 and 161 tok/s decode, 365 and 1,800 tok/s prefill.)
+
+**Sustained use: a lesson in not trusting one run.** The first quiet run of the 60-second sustained test showed the 14B tier sliding **smoothly from 34.8 to 26.5 tok/s (76 %)**, and the same run's 3B prefill was low (1,157 tok/s). It looked like a textbook story, so this guide briefly explained it as "the GPU settling after a boost". Then the story was tested:
+
+| Test | 14B decode over time | Verdict |
+| --- | --- | --- |
+| First quiet run (00:55) | 34.8 → 26.5 tok/s in 60 s (76 %) | the anomaly |
+| `make llm-bench POWER=1 SUSTAIN=120` (01:07) | 36.0 → 35.5 in 120 s (**98.7 %**) | doesn't reproduce |
+| Lab rerun, same commands (01:23) | 35.9 → 35.4 in 60 s (**98.7 %**) | doesn't reproduce |
+| 4 min of all-core CPU load first, to heat the chip, then the lab (01:28) | 35.6 → 34.9 in 90 s (**98.2 %**) | doesn't reproduce |
+
+So "the GPU settles after a boost" is refuted (it holds when the GPU is used the same way later), and "the chip was hot from the CPU benchmarks" is refuted (deliberately heating it changed nothing). The decline came from something transient that the tools couldn't see. The service doesn't log individual requests, so another client using the 14B tier at that moment can't be ruled out. The lab now prints the server's **queue time** on every sustained request; a non-zero queue means someone else was being served. **Lessons:** one run is an anecdote, not a measurement; write the explanation *after* trying to break it; and make the tooling record whatever would have told you the answer.
+
+**Energy** (`make llm-bench POWER=1` in gRPC_llm, which wraps `powermetrics`):
+
+| | GPU | CPU | ANE | All | Decode | Energy per token | Per GB of weights streamed |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 14B, llama.cpp (132 s window) | 35.6 W | 0.6 W | 0 | 36.2 W | 35.5 tok/s | **≈1.0 J** | ≈0.12 J |
+| 3B, MLX (**2.6 s window: tentative**) | 24.4 W | 0.7 W | 0 | 25.0 W | 161 tok/s | ≈0.16 J | ≈0.09 J |
+
+How to read it: decode energy follows **bytes moved**, not FLOPs. Both models cost roughly 0.1 J for every GB of weights pulled through the GPU, so a model 5× smaller costs about 6× less energy per token. (The 3B figure averages only two or three one-second samples; rerun it with `SUSTAIN=120` before quoting it.) For comparison, R4 measured the ANE running a 4B model at about 2.4 W for the whole worker, against 19.4 W for the GPU doing the same job: about 5× less power, about 5.5× slower. The co-design reading: the ANE is energy-efficient per byte but starved of bandwidth. Feeding it more bandwidth is the "next chip" answer in P0.
 
 **Step 3, explain the gap.**
 - 410 GB/s is a peak. GPUs usually sustain 70–90 % of it on a pure stream.
@@ -268,7 +289,7 @@ The lab only sends ordinary `Generate` calls and writes nothing inside gRPC_llm.
 1. **Prefix caching differs by engine.** Sending the same 1,851-token prompt twice: llama.cpp answered the repeat in **0.05 s instead of 5.7 s**, because it reused the cached prompt. MLX took 1.4 s both times; the server confirms **0 of 1,865 prompt tokens reused**. Agent loops that resend a long system prompt pay the full prompt cost on every turn on the MLX tier. That is an improvement worth making there.
 2. **The same model on a CPU in Docker** (from gRPC_llm's earlier logs: Qwen2.5-3B Q5_K_M): 39 tok/s decode and 131 tok/s prefill, against **91 and 1,529** on Metal. Decode drops 2.3× (CPU bandwidth instead of GPU bandwidth); prefill drops **12×** (CPU maths instead of GPU maths). That's the decode/prefill split from Lab 4, on a real service.
 
-**Cost model.** When two tiers give stable numbers, the lab fits *time per token = bytes ÷ B + c* (the same per-byte + fixed-cost model as the ANE R1 work) and rejects impossible fits (c < 0 or B above the spec). The quiet run gave **B ≈ 314 GB/s** (77 % of the 410 GB/s spec is actually usable for streaming) and **c ≈ 1.1 ms** of fixed cost per token. That c is 4 % of a 14B token (28 ms) but 17 % of a 3B token (6.7 ms), which is why the small model sits further below its ceiling. Caveat: two engines. The busy-GPU run gave B ≈ 265, c ≈ 1.7 ms, and an earlier unstable run produced a negative c, which was rejected. Validating the model means predicting a *third* model, then checking.
+**Cost model.** When two tiers give stable numbers, the lab fits *time per token = bytes ÷ B + c* (the same per-byte + fixed-cost model as the ANE R1 work) and rejects impossible fits (c < 0 or B above the spec). The quiet runs gave **B ≈ 314–316 GB/s** (77 % of the 410 GB/s spec is actually usable for streaming) and **c ≈ 0.85–1.1 ms** of fixed cost per token. That c is 3–4 % of a 14B token (28 ms) but 13–17 % of a 3B token (6.4 ms), which is why the small model sits further below its ceiling. Caveat: two engines. The busy-GPU run gave B ≈ 265, c ≈ 1.7 ms, and an earlier unstable run produced a negative c, which was rejected. Validating the model means predicting a *third* model, then checking.
 
 ---
 
@@ -324,7 +345,8 @@ Any program sits somewhere on this chart. **On the slope:** memory-bound, so onl
 | GPTQ, perplexity, task-accuracy gate for Q8/Q4 | "Is it good enough?" | P2 next slice, on Qwen3-0.6B |
 | llama.cpp profiling (P3 proper) | Op-level time breakdown, thread scaling | Build pinned llama.cpp, `llama-bench`, Instruments Time Profiler |
 | IREE, RISC-V, runtime, CI harness (P4–P7) | See the interview plan | Order: P5 → P4 → P6 → P7 |
-| Power and energy per token | Tokens per joule; whether the 14B slowdown follows GPU watts | `make llm-bench POWER=1 PORT=50051` (and `50061`) in gRPC_llm, in your own Terminal (needs sudo) |
+| Reliable 3B energy figure | Its power window was 2.6 s | `make llm-bench POWER=1 PORT=50061 SUSTAIN=120` in gRPC_llm (your own Terminal; needs sudo) |
+| Per-request server logs in gRPC_llm | Would have shown whether another client caused the one-off slowdown | Log request id, queue time and token counts per `Generate` call |
 
 ## Exercises
 

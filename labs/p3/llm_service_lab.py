@@ -370,8 +370,10 @@ def main() -> int:
             while time.perf_counter() - t0 < a.seconds:
                 d = generate(stub, pb, unique(DECODE_PROMPT), a.decode_tokens, 600)
                 sustained.append(d["decode_tok_s"])
+                # Server queue time > 0 means another client was using this tier at the same time.
+                q = f"  queued {d['usage'].get('queue_ms', 0):5.0f} ms" if d["usage"] else ""
                 print(f"        t={time.perf_counter() - t0:6.1f}s  decode {d['decode_tok_s']:6.1f} tok/s  "
-                      f"({100 * d['decode_tok_s'] / sustained[0]:5.1f}% of first)")
+                      f"({100 * d['decode_tok_s'] / sustained[0]:5.1f}% of first){q}")
 
         # ---------------- 3. explain
         eff_bw = decode * z["per_token_bytes"] / 1e9
