@@ -1,0 +1,4 @@
+-r requirements.txt
+mlx==0.32.2
+mlx-lm==0.31.3
+huggingface_hub==1.32.0

@@ -1,0 +1,85 @@
+{
+  "schema_version": 1,
+  "inspection_date": "2026-09-18",
+  "source_root": "/Users/sertanavdan/Documents/Software/AI/gRPC_llm",
+  "branch": "NEXUS",
+  "head": "bce453e4f047ca0a24314982c9fc5be8152e8a94",
+  "scope": "Observed working tree, not a clean commit snapshot. Read-only inspection; no runtime execution.",
+  "source_files": [
+    {
+      "path": "orchestrator/delegation_manager.py",
+      "sha256": "08ee325b614e26b38bdfdde94753932beb8b97d6b7783ad96825d2860f88656d",
+      "git_status": ""
+    },
+    {
+      "path": "orchestrator/intent_patterns.py",
+      "sha256": "cc6b82461bdc0c0ec991353cda1683822d1eadf520ded776fc504f86efb29202",
+      "git_status": ""
+    },
+    {
+      "path": "orchestrator/capability_map.py",
+      "sha256": "602b5f3bb9b1f819617fc4d883dd85bd774d36e32c3c414a1fe28c3086a74c28",
+      "git_status": ""
+    },
+    {
+      "path": "orchestrator/orchestrator_service.py",
+      "sha256": "1e663ebb1bf3475b8b220ae556867c1e2d9ab3a280405eb4981816d6e43a905a",
+      "git_status": "M orchestrator/orchestrator_service.py"
+    },
+    {
+      "path": "orchestrator/routing_config.py",
+      "sha256": "ebb41f29989d691001ef5e52982d2c006bb3cae8aceedded310b6283159b8d65",
+      "git_status": ""
+    },
+    {
+      "path": "orchestrator/config_manager.py",
+      "sha256": "403ed17e3a953d7b51a5bd8de55d4c1c78a7316e82b5a3d933b83d0df225f3f3",
+      "git_status": ""
+    },
+    {
+      "path": "shared/clients/llm_client.py",
+      "sha256": "7c19ebe93a8e2610fbd884f653075c8283316a89dd5faac6a682b3fceee1ec28",
+      "git_status": ""
+    },
+    {
+      "path": "shared/proto/llm.proto",
+      "sha256": "63a0153b91ef616ab3e080d7a2ac8c24d3d536b7d7f6a28694245d3f659335ac",
+      "git_status": ""
+    },
+    {
+      "path": "llm_service/llm_service.py",
+      "sha256": "0d84bab8f8d6e8b980cd1b7f60acd237ed77a6c1663ee6f031d54e67601bdd5f",
+      "git_status": ""
+    },
+    {
+      "path": "config/routing_config.json",
+      "sha256": "5732c493c3f3c437e6f73c41b8868ea8c2b534df4e216a55e4dd31aef0af32e6",
+      "git_status": ""
+    },
+    {
+      "path": "docs/LLM_SERVICE_REDESIGN.md",
+      "sha256": "c0e2c5ee2829776f0e843685748cbe3dbd8b812f777310175673398e7d39c844",
+      "git_status": ""
+    },
+    {
+      "path": "tests/unit/test_capability_map.py",
+      "sha256": "78eaba4cde67b5c9c293523ebd94cbcc103ca1b494fd998802b14803dfec1773",
+      "git_status": ""
+    },
+    {
+      "path": "tests/unit/test_delegation_manager.py",
+      "sha256": "93e944e1d765ccbb8b11a22c19e83b65d49fc7d7eab9ee9e179e7f2548bdac32",
+      "git_status": ""
+    },
+    {
+      "path": "scripts/test_inference_speed.py",
+      "sha256": "a01c92031d2422b4fc55c38d19a6362641ffdbdc4ab58693dd19824fd8b7d22a",
+      "git_status": ""
+    },
+    {
+      "path": ".claude/SKILLS/spike-findings-grpc-llm/SKILL.md",
+      "sha256": "dbe511875dd9870c91412ae09e0815f6937538eac9adbc9e53a39343432d3c5c",
+      "git_status": ""
+    }
+  ]
+}

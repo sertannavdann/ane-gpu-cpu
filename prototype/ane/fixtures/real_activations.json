@@ -1,0 +1,56 @@
+{
+  "model": "Qwen/Qwen3-0.6B",
+  "layer": 0,
+  "S": 32,
+  "prompt": "Explain this routing trace: classification returned capabilities [coding, verification], complexity 0.4, and the request went direct to the heavy tier. Why direct and why heavy? Answer in three sentences.",
+  "token_ids": [
+    840,
+    20772,
+    419,
+    29058,
+    11655,
+    25,
+    23850,
+    5927,
+    16928,
+    508,
+    48367,
+    11,
+    22901,
+    1125,
+    23094,
+    220,
+    15,
+    13,
+    19,
+    11,
+    323,
+    279,
+    1681,
+    3937,
+    2118,
+    311,
+    279,
+    8811,
+    25996,
+    13,
+    8429,
+    2118
+  ],
+  "x_attn_in": {
+    "shape": [
+      32,
+      1024
+    ],
+    "abs_max": 3.046875,
+    "rms": 0.2112444278766567
+  },
+  "x_mlp_in": {
+    "shape": [
+      32,
+      1024
+    ],
+    "abs_max": 10.5625,
+    "rms": 0.4400854540099924
+  }
+}

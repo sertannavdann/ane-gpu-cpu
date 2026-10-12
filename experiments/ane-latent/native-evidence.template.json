@@ -1,0 +1,85 @@
+{
+  "schema_version": 1,
+  "evidence_kind": "native_ane",
+  "baseline_valid": null,
+  "interference_free": null,
+  "boundary": "full_ffn",
+  "internal_residency": "unknown",
+  "provenance": {
+    "source_sha256": null,
+    "runtime_sha256": null,
+    "weights_sha256": null,
+    "inputs_sha256": null,
+    "baseline_mil_sha256": null,
+    "candidate_mil_sha256": null
+  },
+  "execution": {
+    "baseline": {
+      "requested_graph": null,
+      "selected_graph": null,
+      "fallback": null,
+      "host_calls_per_invocation": null
+    },
+    "candidate": {
+      "requested_graph": null,
+      "selected_graph": null,
+      "fallback": null,
+      "host_calls_per_invocation": null
+    }
+  },
+  "cases": [],
+  "stability": {
+    "calls": 0,
+    "failures": null,
+    "checksum_drift": null
+  },
+  "windows": [],
+  "artifacts": [],
+  "contract_examples": {
+    "case": {
+      "id": "real-s32-seed0",
+      "s": 32,
+      "kind": "real_heldout",
+      "input_sha256": null,
+      "finite": null,
+      "implementation_relative_l2": null,
+      "compression_relative_l2": null
+    },
+    "window": {
+      "id": "w-s32-0",
+      "s": 32,
+      "order": [
+        "baseline",
+        "candidate"
+      ],
+      "baseline_input_sha256": null,
+      "candidate_input_sha256": null,
+      "baseline_us": [],
+      "candidate_us": [],
+      "failures": null,
+      "summary": {
+        "baseline_p50_us": null,
+        "candidate_p50_us": null,
+        "baseline_p95_us": null,
+        "candidate_p95_us": null,
+        "baseline_count": null,
+        "candidate_count": null
+      }
+    },
+    "artifact": {
+      "path": "relative/path/to/raw-log",
+      "sha256": null
+    }
+  },
+  "summary": {
+    "cases": null,
+    "windows": null,
+    "stability_calls": null
+  },
+  "contract_notes": [
+    "case and window ids must be unique non-empty strings",
+    "real_heldout cases are required at each of S=1, 8 and 32",
+    "input_sha256 values must name files listed in artifacts; baseline and candidate hashes must be equal per window",
+    "optional summaries are recomputed from raw samples; any disagreement invalidates the import"
+  ]
+}

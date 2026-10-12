@@ -1,0 +1,26 @@
+{
+  "model_id": "Qwen/Qwen3-0.6B",
+  "snapshot": "c1899de289a04d12100db370d81485cdf75e47ca",
+  "tensor": "model.layers.0.mlp.up_proj.weight",
+  "shape_NK": [
+    3072,
+    1024
+  ],
+  "dtype": "BF16",
+  "tensor_sha256": "0df928e6dee73989a12582615e517343a6bcbbc6772a0850672c34427a11de8d",
+  "shard_sha256": "f47f71177f32bcd101b7573ec9171e6a57f4f4d31148d38e382306f42996874b",
+  "shard_bytes": 1503300328,
+  "config": {
+    "hidden_size": 1024,
+    "num_attention_heads": 16,
+    "num_key_value_heads": 8,
+    "head_dim": 128,
+    "intermediate_size": 3072,
+    "rms_norm_eps": 1e-06,
+    "torch_dtype": "bfloat16"
+  },
+  "weight_stats": {
+    "abs_max": 0.375,
+    "rms": 0.025854942190632474
+  }
+}

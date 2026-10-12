@@ -1,0 +1,34 @@
+{
+  "relationship": "read-only methodological influence; not copied code or accreditation",
+  "root": "/Users/sertanavdan/Documents/Documents - Sertan\u2019s MacBook Pro/Software/Mercor/cuda-golden-kernels-l8hie",
+  "files": [
+    {
+      "path": "scripts/seed_benchmark.py",
+      "sha256": "9dcfae9e74c7c72ff9a5e33ef7e063f2917ed4ede353697aeafc39fa1aa60421"
+    },
+    {
+      "path": "scripts/benchmark_framework.py",
+      "sha256": "86bc8669028468172afc3deb3784752bfaaf782889810639bc8d498ebb3ebce5"
+    },
+    {
+      "path": "scripts/input_variants/README.md",
+      "sha256": "3aa8600812e3762b75779c92167ff162d37902a2bbe2ba9a008dc308732e7fb1"
+    },
+    {
+      "path": "scripts/io/test_comparison.py",
+      "sha256": "3f327aa3f0367fedb72bbafb2e5f4eb55922f43f463cdb4b67f2e0d7a52696ff"
+    }
+  ],
+  "adopted": [
+    "deterministic variants",
+    "reference/candidate separation",
+    "explicit timing policy",
+    "failure receipts and provenance"
+  ],
+  "not_adopted": [
+    "CUDA infrastructure",
+    "remote agent execution",
+    "Mercor speedup threshold",
+    "matching nonfinite outputs as correctness"
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "router": "keyword",
+  "generator": "fake",
+  "train_path": "prototype/bench/workload/train.jsonl",
+  "priority": true,
+  "fg_capacity": 4,
+  "bg_capacity": 4,
+  "router_timeout_ms": 2000,
+  "deadline_ms": {
+    "foreground": 30000,
+    "background": 120000
+  },
+  "max_output_tokens": {
+    "foreground": 96,
+    "background": 256
+  },
+  "fg_start_s": 0.3,
+  "fg_interval_s": 1.5,
+  "bg_interval_s": 3.0,
+  "fake_token_delay_s": 0.01,
+  "availability": {
+    "tools": [
+      "get_user_context",
+      "get_commute_time",
+      "build_module",
+      "validate_module",
+      "list_modules"
+    ],
+    "tiers": [
+      "heavy",
+      "standard"
+    ]
+  },
+  "router_failures": {
+    "Build a module": "error",
+    "Translate the daily briefing": "hang",
+    "Extract the listening ports": "invalid"
+  },
+  "hang_s": 2.5,
+  "generation_failures": {
+    "cod-03": 5
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "task": "Tomorrow's briefing: extract one commitment from each of 8 short notes, then write a briefing that lists them and the user's priorities.",
+  "priorities_note": "My own priorities for tomorrow: finish the routing-config patch before noon, review the ANE cost fit with the team, and book the Friday train.",
+  "schema": {"who": "person or organisation", "when": "date and time as written", "where": "place as written", "action": "what has to happen, under 8 words"},
+  "notes": [
+    {"id": "n1", "text": "Hi, this is Maya from the design team. Can we move the design review to Tuesday 09:30 in Room 4B? I want to walk through the routing trace before lunch. Thanks!", "label": {"who": "Maya", "when": "Tuesday 09:30", "where": "Room 4B", "action": "design review moved"}},
+    {"id": "n2", "text": "Reminder from Fixture Dental Clinic: your appointment is on Tuesday at 14:00 at the Clinic on Harbour Street. Please arrive ten minutes early and bring your card.", "label": {"who": "Fixture Dental Clinic", "when": "Tuesday 14:00", "where": "Clinic on Harbour Street", "action": "dental appointment"}},
+    {"id": "n3", "text": "Ravi here. The gRPC client keeps failing with UNAVAILABLE. Could you look at the orchestrator logs with me Wednesday morning, say 10:00, in the small meeting room?", "label": {"who": "Ravi", "when": "Wednesday 10:00", "where": "small meeting room", "action": "debug gRPC UNAVAILABLE together"}},
+    {"id": "n4", "text": "Team lunch is confirmed for Thursday 12:30 at Piazza Cafe on the corner of Mill Lane. Let Jonas know if you cannot make it.", "label": {"who": "Jonas", "when": "Thursday 12:30", "where": "Piazza Cafe", "action": "team lunch"}},
+    {"id": "n5", "text": "This is the building manager. The parking garage will be closed for cleaning on Friday from 07:00 to 09:00. Please park on Elm Street during that time.", "label": {"who": "building manager", "when": "Friday 07:00 to 09:00", "where": "parking garage", "action": "garage closed, park on Elm Street"}},
+    {"id": "n6", "text": "Hey, it's Lena. Could you send me the ANE cost-fit numbers by Monday 17:00? I am presenting the results in the Atrium on Tuesday.", "label": {"who": "Lena", "when": "Monday 17:00", "where": "Atrium", "action": "send ANE cost-fit numbers"}},
+    {"id": "n7", "text": "Train booking reminder: your return ticket from Fixture Central to Northgate on Friday 18:15 has not been paid. Pay at the station kiosk by Thursday.", "label": {"who": "train booking", "when": "Friday 18:15", "where": "Fixture Central", "action": "pay return ticket by Thursday"}},
+    {"id": "n8", "text": "Coach Amir: swimming practice moves to Saturday 08:00 at the North Pool because the main pool is under repair. Bring your own towel.", "label": {"who": "Coach Amir", "when": "Saturday 08:00", "where": "North Pool", "action": "swimming practice moved"}}
+  ]
+}

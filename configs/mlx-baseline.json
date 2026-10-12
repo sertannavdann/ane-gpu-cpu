@@ -1,0 +1,36 @@
+{
+  "router": "tfidf",
+  "generator": "mlx",
+  "train_path": "prototype/bench/workload/train.jsonl",
+  "priority": false,
+  "fg_capacity": 4,
+  "bg_capacity": 4,
+  "router_timeout_ms": 2000,
+  "deadline_ms": {
+    "foreground": 30000,
+    "background": 120000
+  },
+  "max_output_tokens": {
+    "foreground": 96,
+    "background": 400
+  },
+  "fg_start_s": 0.4,
+  "fg_interval_s": 1.0,
+  "bg_interval_s": 4.5,
+  "availability": {
+    "tools": [
+      "get_user_context",
+      "get_commute_time",
+      "build_module",
+      "validate_module",
+      "list_modules"
+    ],
+    "tiers": [
+      "heavy",
+      "standard"
+    ]
+  },
+  "model_id": "mlx-community/Qwen2.5-3B-Instruct-4bit",
+  "model_hash": "5fcaeba115f3b012",
+  "max_context": 4096
+}

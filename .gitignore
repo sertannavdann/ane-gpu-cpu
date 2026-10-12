@@ -1,0 +1,20 @@
+results/
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+cache.nosync/
+prototype/ane/vendor/
+prototype/ane/build/
+prototype/ane/fixtures/*.bin
+prototype/ane/fixtures/*.npy
+prototype/ane/build-full/
+prototype/ane/ane.cpp-bin
+prototype/ane/r3/bin/
+
+# Local-only files kept out of the public repository
+.DS_Store
+.vscode/
+/Users/
+# Full text of a third-party arXiv paper (arXiv licence does not permit redistribution); cite https://arxiv.org/abs/2506.24045v2 instead
+docs/pasted-text.txt

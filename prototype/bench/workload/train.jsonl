@@ -1,0 +1,169 @@
+{"id": "tr-code-a-0", "family_id": "tr-code-a", "input": "Why does my Python function raise a TypeError here?", "task_type": "coding", "tool_intent": null}
+{"id": "tr-code-a-1", "family_id": "tr-code-a", "input": "Fix this bug in the gRPC server code.", "task_type": "coding", "tool_intent": null}
+{"id": "tr-code-a-2", "family_id": "tr-code-a", "input": "Refactor the adapter class to remove duplication.", "task_type": "coding", "tool_intent": null}
+{"id": "tr-code-a-3", "family_id": "tr-code-a", "input": "The stack trace shows a KeyError in the registry code.", "task_type": "coding", "tool_intent": null}
+{"id": "tr-code-a-4", "family_id": "tr-code-a", "input": "Write a unit test for this Python function.", "task_type": "coding", "tool_intent": null}
+{"id": "tr-code-a-5", "family_id": "tr-code-a", "input": "How do I add a retry to this client code?", "task_type": "coding", "tool_intent": null}
+{"id": "tr-code-a-6", "family_id": "tr-code-a", "input": "Explain this exception in my Python script.", "task_type": "coding", "tool_intent": null}
+{"id": "tr-code-a-7", "family_id": "tr-code-a", "input": "Implement a small adapter in code for the classifier output.", "task_type": "coding", "tool_intent": null}
+{"id": "tr-reason-a-0", "family_id": "tr-reason-a", "input": "Explain why the request was routed to the heavy tier.", "task_type": "reasoning", "tool_intent": null}
+{"id": "tr-reason-a-1", "family_id": "tr-reason-a", "input": "Compare two queueing strategies for an assistant.", "task_type": "reasoning", "tool_intent": null}
+{"id": "tr-reason-a-2", "family_id": "tr-reason-a", "input": "According to the document I pasted, which option applies?", "task_type": "reasoning", "tool_intent": null}
+{"id": "tr-reason-a-3", "family_id": "tr-reason-a", "input": "Analyse the risk of silent fallback in this design.", "task_type": "reasoning", "tool_intent": null}
+{"id": "tr-reason-a-4", "family_id": "tr-reason-a", "input": "Which setting in the runbook controls retries?", "task_type": "reasoning", "tool_intent": null}
+{"id": "tr-reason-a-5", "family_id": "tr-reason-a", "input": "Verify this statement using the excerpt provided.", "task_type": "reasoning", "tool_intent": null}
+{"id": "tr-reason-a-6", "family_id": "tr-reason-a", "input": "Trace the decision path for this request.", "task_type": "reasoning", "tool_intent": null}
+{"id": "tr-reason-a-7", "family_id": "tr-reason-a", "input": "From the config excerpt, which value sets the timeout?", "task_type": "reasoning", "tool_intent": null}
+{"id": "tr-fin-a-0", "family_id": "tr-fin-a", "input": "What is the total of these expenses: 4.20, 9.80 and 3.00?", "task_type": "finance", "tool_intent": null}
+{"id": "tr-fin-a-1", "family_id": "tr-fin-a", "input": "Add VAT at 20 percent to an invoice of 150.", "task_type": "finance", "tool_intent": null}
+{"id": "tr-fin-a-2", "family_id": "tr-fin-a", "input": "Split my budget of 900 into rent, food and savings.", "task_type": "finance", "tool_intent": null}
+{"id": "tr-fin-a-3", "family_id": "tr-fin-a", "input": "What is the balance after interest of 5 percent on 500?", "task_type": "finance", "tool_intent": null}
+{"id": "tr-fin-a-4", "family_id": "tr-fin-a", "input": "Sum the amounts on this statement.", "task_type": "finance", "tool_intent": null}
+{"id": "tr-fin-a-5", "family_id": "tr-fin-a", "input": "How much tax is due on 2000 at 10 percent?", "task_type": "finance", "tool_intent": null}
+{"id": "tr-math-a-0", "family_id": "tr-math-a", "input": "Compute 12 percent of 250.", "task_type": "math", "tool_intent": null}
+{"id": "tr-math-a-1", "family_id": "tr-math-a", "input": "Solve for x: 2x plus 3 equals 11.", "task_type": "math", "tool_intent": null}
+{"id": "tr-math-a-2", "family_id": "tr-math-a", "input": "What is the probability of two sixes in two dice rolls?", "task_type": "math", "tool_intent": null}
+{"id": "tr-math-a-3", "family_id": "tr-math-a", "input": "How many minutes are in 3.5 hours?", "task_type": "math", "tool_intent": null}
+{"id": "tr-math-a-4", "family_id": "tr-math-a", "input": "Calculate the sum of the first ten integers.", "task_type": "math", "tool_intent": null}
+{"id": "tr-math-a-5", "family_id": "tr-math-a", "input": "What is 7 times 8?", "task_type": "math", "tool_intent": null}
+{"id": "tr-multi-a-0", "family_id": "tr-multi-a", "input": "Translate this sentence into French.", "task_type": "multilingual", "tool_intent": null}
+{"id": "tr-multi-a-1", "family_id": "tr-multi-a", "input": "Translate into Turkish: good evening.", "task_type": "multilingual", "tool_intent": null}
+{"id": "tr-multi-a-2", "family_id": "tr-multi-a", "input": "Wie sagt man 'queue' auf Deutsch?", "task_type": "multilingual", "tool_intent": null}
+{"id": "tr-multi-a-3", "family_id": "tr-multi-a", "input": "Translate the note into Spanish.", "task_type": "multilingual", "tool_intent": null}
+{"id": "tr-multi-a-4", "family_id": "tr-multi-a", "input": "\u00dcbersetze diesen Satz ins Englische.", "task_type": "multilingual", "tool_intent": null}
+{"id": "tr-multi-a-5", "family_id": "tr-multi-a", "input": "Bu c\u00fcmleyi \u0130ngilizceye \u00e7evir.", "task_type": "multilingual", "tool_intent": null}
+{"id": "tr-search-a-0", "family_id": "tr-search-a", "input": "Search the web for the latest MLX release notes.", "task_type": "search", "tool_intent": null}
+{"id": "tr-search-a-1", "family_id": "tr-search-a", "input": "Look up online who won the game yesterday.", "task_type": "search", "tool_intent": null}
+{"id": "tr-search-a-2", "family_id": "tr-search-a", "input": "What is the current price of this stock today?", "task_type": "search", "tool_intent": null}
+{"id": "tr-search-a-3", "family_id": "tr-search-a", "input": "Find the latest news about Apple silicon.", "task_type": "search", "tool_intent": null}
+{"id": "tr-search-a-4", "family_id": "tr-search-a", "input": "Use a web search to check today's headlines.", "task_type": "search", "tool_intent": null}
+{"id": "tr-general-a-0", "family_id": "tr-general-a", "input": "What does the word latency mean?", "task_type": "general", "tool_intent": null}
+{"id": "tr-general-a-1", "family_id": "tr-general-a", "input": "Hello, can you help me today?", "task_type": "general", "tool_intent": null}
+{"id": "tr-general-a-2", "family_id": "tr-general-a", "input": "Define unified memory in one sentence.", "task_type": "general", "tool_intent": null}
+{"id": "tr-general-a-3", "family_id": "tr-general-a", "input": "Thanks, that is all for now.", "task_type": "general", "tool_intent": null}
+{"id": "tr-general-a-4", "family_id": "tr-general-a", "input": "What is a token in a language model?", "task_type": "general", "tool_intent": null}
+{"id": "tr-leave-a-0", "family_id": "tr-leave-a", "input": "When should I leave for the office?", "task_type": "general", "tool_intent": "leave_time"}
+{"id": "tr-leave-a-1", "family_id": "tr-leave-a", "input": "What time should I leave to reach the clinic by two?", "task_type": "general", "tool_intent": "leave_time"}
+{"id": "tr-leave-a-2", "family_id": "tr-leave-a", "input": "When do I need to leave for my meeting?", "task_type": "general", "tool_intent": "leave_time"}
+{"id": "tr-leave-a-3", "family_id": "tr-leave-a", "input": "Tell me my departure time for the office.", "task_type": "general", "tool_intent": "leave_time"}
+{"id": "tr-brief-a-0", "family_id": "tr-brief-a", "input": "Give me my morning update.", "task_type": "general", "tool_intent": "daily_briefing"}
+{"id": "tr-brief-a-1", "family_id": "tr-brief-a", "input": "What's my day looking like today?", "task_type": "general", "tool_intent": "daily_briefing"}
+{"id": "tr-brief-a-2", "family_id": "tr-brief-a", "input": "Prepare a daily summary from my calendar.", "task_type": "general", "tool_intent": "daily_briefing"}
+{"id": "tr-brief-a-3", "family_id": "tr-brief-a", "input": "Run my briefing for today.", "task_type": "general", "tool_intent": "daily_briefing"}
+{"id": "tr-commute-a-0", "family_id": "tr-commute-a", "input": "How do I get to my meeting this afternoon?", "task_type": "general", "tool_intent": "commute_with_calendar"}
+{"id": "tr-commute-a-1", "family_id": "tr-commute-a", "input": "How long is the commute to work today?", "task_type": "general", "tool_intent": "commute_with_calendar"}
+{"id": "tr-commute-a-2", "family_id": "tr-commute-a", "input": "Plan my drive to the office for the 9:30 meeting.", "task_type": "general", "tool_intent": "commute_with_calendar"}
+{"id": "tr-commute-a-3", "family_id": "tr-commute-a", "input": "How do I travel to my appointment?", "task_type": "general", "tool_intent": "commute_with_calendar"}
+{"id": "tr-prep-a-0", "family_id": "tr-prep-a", "input": "Help me prepare for my 9:30 meeting.", "task_type": "general", "tool_intent": "meeting_prep"}
+{"id": "tr-prep-a-1", "family_id": "tr-prep-a", "input": "What do I need before my meeting?", "task_type": "general", "tool_intent": "meeting_prep"}
+{"id": "tr-prep-a-2", "family_id": "tr-prep-a", "input": "Get me ready for the design review meeting.", "task_type": "general", "tool_intent": "meeting_prep"}
+{"id": "tr-prep-a-3", "family_id": "tr-prep-a", "input": "Meeting prep for this afternoon, please.", "task_type": "general", "tool_intent": "meeting_prep"}
+{"id": "tr-weather-a-0", "family_id": "tr-weather-a", "input": "What is the weather tomorrow?", "task_type": "general", "tool_intent": "weather_check"}
+{"id": "tr-weather-a-1", "family_id": "tr-weather-a", "input": "Will it rain this afternoon?", "task_type": "general", "tool_intent": "weather_check"}
+{"id": "tr-weather-a-2", "family_id": "tr-weather-a", "input": "Do I need an umbrella today?", "task_type": "general", "tool_intent": "weather_check"}
+{"id": "tr-weather-a-3", "family_id": "tr-weather-a", "input": "What's the temperature outside right now?", "task_type": "general", "tool_intent": "weather_check"}
+{"id": "tr-weather-a-4", "family_id": "tr-weather-a", "input": "Is it going to snow tomorrow morning?", "task_type": "general", "tool_intent": "weather_check"}
+{"id": "tr-wc-a-0", "family_id": "tr-wc-a", "input": "Should I drive given the weather?", "task_type": "general", "tool_intent": "weather_commute"}
+{"id": "tr-wc-a-1", "family_id": "tr-wc-a", "input": "How should I dress for my commute?", "task_type": "general", "tool_intent": "weather_commute"}
+{"id": "tr-wc-a-2", "family_id": "tr-wc-a", "input": "What are the road conditions for my drive?", "task_type": "general", "tool_intent": "weather_commute"}
+{"id": "tr-wc-a-3", "family_id": "tr-wc-a", "input": "Is the weather okay for driving to the office?", "task_type": "general", "tool_intent": "weather_commute"}
+{"id": "tr-status-a-0", "family_id": "tr-status-a", "input": "Give me a complete overview of today.", "task_type": "general", "tool_intent": "full_status"}
+{"id": "tr-status-a-1", "family_id": "tr-status-a", "input": "What's happening today, everything please.", "task_type": "general", "tool_intent": "full_status"}
+{"id": "tr-status-a-2", "family_id": "tr-status-a", "input": "Full status update, please.", "task_type": "general", "tool_intent": "full_status"}
+{"id": "tr-status-a-3", "family_id": "tr-status-a", "input": "Show me everything on my plate today.", "task_type": "general", "tool_intent": "full_status"}
+{"id": "tr-build-a-0", "family_id": "tr-build-a", "input": "Build a module that syncs my notes.", "task_type": "coding", "tool_intent": "build_module"}
+{"id": "tr-build-a-1", "family_id": "tr-build-a", "input": "Create a new module for calendar alerts.", "task_type": "coding", "tool_intent": "build_module"}
+{"id": "tr-build-a-2", "family_id": "tr-build-a", "input": "Make a module called weather_digest.", "task_type": "coding", "tool_intent": "build_module"}
+{"id": "tr-build-a-3", "family_id": "tr-build-a", "input": "Build me a module that lists commutes.", "task_type": "coding", "tool_intent": "build_module"}
+{"id": "tr-manage-a-0", "family_id": "tr-manage-a", "input": "List the installed modules.", "task_type": "general", "tool_intent": "manage_modules"}
+{"id": "tr-manage-a-1", "family_id": "tr-manage-a", "input": "Which modules do I have?", "task_type": "general", "tool_intent": "manage_modules"}
+{"id": "tr-manage-a-2", "family_id": "tr-manage-a", "input": "Remove the weather module.", "task_type": "general", "tool_intent": "manage_modules"}
+{"id": "tr-manage-a-3", "family_id": "tr-manage-a", "input": "Show me the modules that are installed.", "task_type": "general", "tool_intent": "manage_modules"}
+{"id": "tr-code-b-0", "family_id": "tr-code-b", "input": "Debug this stack trace from the orchestrator service.", "task_type": "coding", "tool_intent": null}
+{"id": "tr-code-b-1", "family_id": "tr-code-b", "input": "Why is my async gRPC call blocking the event loop in Python?", "task_type": "coding", "tool_intent": null}
+{"id": "tr-code-b-2", "family_id": "tr-code-b", "input": "Add type hints to this Python class.", "task_type": "coding", "tool_intent": null}
+{"id": "tr-code-b-3", "family_id": "tr-code-b", "input": "My pytest run fails with an ImportError, what is wrong?", "task_type": "coding", "tool_intent": null}
+{"id": "tr-code-b-4", "family_id": "tr-code-b", "input": "Rewrite this loop as a list comprehension in code.", "task_type": "coding", "tool_intent": null}
+{"id": "tr-code-b-5", "family_id": "tr-code-b", "input": "The adapter raises AttributeError on missing field; patch it.", "task_type": "coding", "tool_intent": null}
+{"id": "tr-code-b-6", "family_id": "tr-code-b", "input": "How do I mock the Llama class in a unit test?", "task_type": "coding", "tool_intent": null}
+{"id": "tr-code-b-7", "family_id": "tr-code-b", "input": "Fix the off-by-one bug in this function.", "task_type": "coding", "tool_intent": null}
+{"id": "tr-code-b-8", "family_id": "tr-code-b", "input": "Explain this Python exception and how to handle it in code.", "task_type": "coding", "tool_intent": null}
+{"id": "tr-reason-b-0", "family_id": "tr-reason-b", "input": "Why would a bounded queue reject requests under a burst?", "task_type": "reasoning", "tool_intent": null}
+{"id": "tr-reason-b-1", "family_id": "tr-reason-b", "input": "Using the pasted runbook, what is the recovery step for a stuck worker?", "task_type": "reasoning", "tool_intent": null}
+{"id": "tr-reason-b-2", "family_id": "tr-reason-b", "input": "Compare priority scheduling with FIFO for interactive latency.", "task_type": "reasoning", "tool_intent": null}
+{"id": "tr-reason-b-3", "family_id": "tr-reason-b", "input": "Which line of the config sets the heavy tier endpoint?", "task_type": "reasoning", "tool_intent": null}
+{"id": "tr-reason-b-4", "family_id": "tr-reason-b", "input": "Assess whether this trace shows a timeout or a crash.", "task_type": "reasoning", "tool_intent": null}
+{"id": "tr-reason-b-5", "family_id": "tr-reason-b", "input": "Does the excerpt support the claim that the lock is global?", "task_type": "reasoning", "tool_intent": null}
+{"id": "tr-reason-b-6", "family_id": "tr-reason-b", "input": "Explain why complexity below 0.5 goes direct in this router.", "task_type": "reasoning", "tool_intent": null}
+{"id": "tr-reason-b-7", "family_id": "tr-reason-b", "input": "From the notes provided, what is the safe preemption boundary?", "task_type": "reasoning", "tool_intent": null}
+{"id": "tr-reason-b-8", "family_id": "tr-reason-b", "input": "Locate the setting for max sub-tasks in the excerpt.", "task_type": "reasoning", "tool_intent": null}
+{"id": "tr-fin-b-0", "family_id": "tr-fin-b", "input": "Total these receipts: 12.40, 3.10, 28.00.", "task_type": "finance", "tool_intent": null}
+{"id": "tr-fin-b-1", "family_id": "tr-fin-b", "input": "Compute the invoice amount with 8 percent tax on 400.", "task_type": "finance", "tool_intent": null}
+{"id": "tr-fin-b-2", "family_id": "tr-fin-b", "input": "Allocate 2000 across rent 60 percent and food 40 percent.", "task_type": "finance", "tool_intent": null}
+{"id": "tr-fin-b-3", "family_id": "tr-fin-b", "input": "What is the interest on 1500 at 3 percent for one year?", "task_type": "finance", "tool_intent": null}
+{"id": "tr-fin-b-4", "family_id": "tr-fin-b", "input": "Sum the expenses in this synthetic statement.", "task_type": "finance", "tool_intent": null}
+{"id": "tr-fin-b-5", "family_id": "tr-fin-b", "input": "How much VAT is included in a gross price of 120 at 20 percent?", "task_type": "finance", "tool_intent": null}
+{"id": "tr-fin-b-6", "family_id": "tr-fin-b", "input": "Work out my remaining budget after 350 of spending from 900.", "task_type": "finance", "tool_intent": null}
+{"id": "tr-math-b-0", "family_id": "tr-math-b", "input": "What is 25 percent of 360?", "task_type": "math", "tool_intent": null}
+{"id": "tr-math-b-1", "family_id": "tr-math-b", "input": "Solve 3x minus 4 equals 11 for x.", "task_type": "math", "tool_intent": null}
+{"id": "tr-math-b-2", "family_id": "tr-math-b", "input": "How many ways can you arrange three books on a shelf?", "task_type": "math", "tool_intent": null}
+{"id": "tr-math-b-3", "family_id": "tr-math-b", "input": "Compute the probability of at least one head in two coin flips.", "task_type": "math", "tool_intent": null}
+{"id": "tr-math-b-4", "family_id": "tr-math-b", "input": "What is the square root of 144?", "task_type": "math", "tool_intent": null}
+{"id": "tr-math-b-5", "family_id": "tr-math-b", "input": "Convert 2.5 hours into minutes.", "task_type": "math", "tool_intent": null}
+{"id": "tr-math-b-6", "family_id": "tr-math-b", "input": "How many efficiency cores does a 14-core chip with 10 performance cores have?", "task_type": "math", "tool_intent": null}
+{"id": "tr-multi-b-0", "family_id": "tr-multi-b", "input": "Translate 'the meeting starts soon' into French.", "task_type": "multilingual", "tool_intent": null}
+{"id": "tr-multi-b-1", "family_id": "tr-multi-b", "input": "Say 'good morning' in Turkish.", "task_type": "multilingual", "tool_intent": null}
+{"id": "tr-multi-b-2", "family_id": "tr-multi-b", "input": "Was hei\u00dft 'token' auf Englisch? Antworte auf Deutsch.", "task_type": "multilingual", "tool_intent": null}
+{"id": "tr-multi-b-3", "family_id": "tr-multi-b", "input": "Translate this briefing into Spanish, please.", "task_type": "multilingual", "tool_intent": null}
+{"id": "tr-multi-b-4", "family_id": "tr-multi-b", "input": "\u00dcbersetze 'Warteschlange' ins Englische.", "task_type": "multilingual", "tool_intent": null}
+{"id": "tr-multi-b-5", "family_id": "tr-multi-b", "input": "Bu notu Frans\u0131zcaya \u00e7evir.", "task_type": "multilingual", "tool_intent": null}
+{"id": "tr-multi-b-6", "family_id": "tr-multi-b", "input": "Put this sentence into Italian: the train is late.", "task_type": "multilingual", "tool_intent": null}
+{"id": "tr-search-b-0", "family_id": "tr-search-b", "input": "Search online for the newest Qwen model release.", "task_type": "search", "tool_intent": null}
+{"id": "tr-search-b-1", "family_id": "tr-search-b", "input": "What are today's headlines about Apple silicon?", "task_type": "search", "tool_intent": null}
+{"id": "tr-search-b-2", "family_id": "tr-search-b", "input": "Look up the current exchange rate on the web.", "task_type": "search", "tool_intent": null}
+{"id": "tr-search-b-3", "family_id": "tr-search-b", "input": "Find out who won last night's match online.", "task_type": "search", "tool_intent": null}
+{"id": "tr-search-b-4", "family_id": "tr-search-b", "input": "Use the perplexity provider to check the latest news.", "task_type": "search", "tool_intent": null}
+{"id": "tr-search-b-5", "family_id": "tr-search-b", "input": "What is the stock price right now?", "task_type": "search", "tool_intent": null}
+{"id": "tr-general-b-0", "family_id": "tr-general-b", "input": "What is a KV cache, in one sentence?", "task_type": "general", "tool_intent": null}
+{"id": "tr-general-b-1", "family_id": "tr-general-b", "input": "Hi there, ready when you are.", "task_type": "general", "tool_intent": null}
+{"id": "tr-general-b-2", "family_id": "tr-general-b", "input": "Define time to first token.", "task_type": "general", "tool_intent": null}
+{"id": "tr-general-b-3", "family_id": "tr-general-b", "input": "What does p95 mean?", "task_type": "general", "tool_intent": null}
+{"id": "tr-general-b-4", "family_id": "tr-general-b", "input": "Thank you, goodbye.", "task_type": "general", "tool_intent": null}
+{"id": "tr-general-b-5", "family_id": "tr-general-b", "input": "Can you help me with something quick?", "task_type": "general", "tool_intent": null}
+{"id": "tr-leave-b-0", "family_id": "tr-leave-b", "input": "What time should I leave to get to the clinic?", "task_type": "general", "tool_intent": "leave_time"}
+{"id": "tr-leave-b-1", "family_id": "tr-leave-b", "input": "When to leave for the design review?", "task_type": "general", "tool_intent": "leave_time"}
+{"id": "tr-leave-b-2", "family_id": "tr-leave-b", "input": "When should I go to make my two o'clock?", "task_type": "general", "tool_intent": "leave_time"}
+{"id": "tr-leave-b-3", "family_id": "tr-leave-b", "input": "When do I need to leave home for the office?", "task_type": "general", "tool_intent": "leave_time"}
+{"id": "tr-brief-b-0", "family_id": "tr-brief-b", "input": "Morning update please.", "task_type": "general", "tool_intent": "daily_briefing"}
+{"id": "tr-brief-b-1", "family_id": "tr-brief-b", "input": "Today's schedule and notes, summarised.", "task_type": "general", "tool_intent": "daily_briefing"}
+{"id": "tr-brief-b-2", "family_id": "tr-brief-b", "input": "Give me the daily summary.", "task_type": "general", "tool_intent": "daily_briefing"}
+{"id": "tr-brief-b-3", "family_id": "tr-brief-b", "input": "What's my day like?", "task_type": "general", "tool_intent": "daily_briefing"}
+{"id": "tr-commute-b-0", "family_id": "tr-commute-b", "input": "Drive to office: how long today?", "task_type": "general", "tool_intent": "commute_with_calendar"}
+{"id": "tr-commute-b-1", "family_id": "tr-commute-b", "input": "How long to travel to my appointment at the clinic?", "task_type": "general", "tool_intent": "commute_with_calendar"}
+{"id": "tr-commute-b-2", "family_id": "tr-commute-b", "input": "Best way to get to my meeting?", "task_type": "general", "tool_intent": "commute_with_calendar"}
+{"id": "tr-commute-b-3", "family_id": "tr-commute-b", "input": "Commute to work estimate for this morning?", "task_type": "general", "tool_intent": "commute_with_calendar"}
+{"id": "tr-prep-b-0", "family_id": "tr-prep-b", "input": "Prep me for the dentist appointment.", "task_type": "general", "tool_intent": "meeting_prep"}
+{"id": "tr-prep-b-1", "family_id": "tr-prep-b", "input": "What should I review before my meeting at 9:30?", "task_type": "general", "tool_intent": "meeting_prep"}
+{"id": "tr-prep-b-2", "family_id": "tr-prep-b", "input": "Get ready for my meeting: what's needed?", "task_type": "general", "tool_intent": "meeting_prep"}
+{"id": "tr-prep-b-3", "family_id": "tr-prep-b", "input": "Meeting prep for the design review.", "task_type": "general", "tool_intent": "meeting_prep"}
+{"id": "tr-weather-b-0", "family_id": "tr-weather-b", "input": "Is it cold outside right now?", "task_type": "general", "tool_intent": "weather_check"}
+{"id": "tr-weather-b-1", "family_id": "tr-weather-b", "input": "Forecast for tomorrow morning?", "task_type": "general", "tool_intent": "weather_check"}
+{"id": "tr-weather-b-2", "family_id": "tr-weather-b", "input": "Will I need a coat, is it hot outside?", "task_type": "general", "tool_intent": "weather_check"}
+{"id": "tr-weather-b-3", "family_id": "tr-weather-b", "input": "Chance of rain this evening?", "task_type": "general", "tool_intent": "weather_check"}
+{"id": "tr-weather-b-4", "family_id": "tr-weather-b", "input": "Any snow expected this week?", "task_type": "general", "tool_intent": "weather_check"}
+{"id": "tr-wc-b-0", "family_id": "tr-wc-b", "input": "Weather for my drive to the office?", "task_type": "general", "tool_intent": "weather_commute"}
+{"id": "tr-wc-b-1", "family_id": "tr-wc-b", "input": "Should I drive or is the weather too bad?", "task_type": "general", "tool_intent": "weather_commute"}
+{"id": "tr-wc-b-2", "family_id": "tr-wc-b", "input": "How should I dress for the commute today?", "task_type": "general", "tool_intent": "weather_commute"}
+{"id": "tr-wc-b-3", "family_id": "tr-wc-b", "input": "Road conditions on the way to the clinic?", "task_type": "general", "tool_intent": "weather_commute"}
+{"id": "tr-status-b-0", "family_id": "tr-status-b", "input": "Status update on everything.", "task_type": "general", "tool_intent": "full_status"}
+{"id": "tr-status-b-1", "family_id": "tr-status-b", "input": "Full status please.", "task_type": "general", "tool_intent": "full_status"}
+{"id": "tr-status-b-2", "family_id": "tr-status-b", "input": "What's happening across all my modules and calendar?", "task_type": "general", "tool_intent": "full_status"}
+{"id": "tr-status-b-3", "family_id": "tr-status-b", "input": "Complete overview for today.", "task_type": "general", "tool_intent": "full_status"}
+{"id": "tr-build-b-0", "family_id": "tr-build-b", "input": "Create a function that exports the calendar as JSON as a new module.", "task_type": "coding", "tool_intent": "build_module"}
+{"id": "tr-build-b-1", "family_id": "tr-build-b", "input": "Build module weather_digest with validation.", "task_type": "coding", "tool_intent": "build_module"}
+{"id": "tr-build-b-2", "family_id": "tr-build-b", "input": "New module: commute_alerts, please build and validate it.", "task_type": "coding", "tool_intent": "build_module"}
+{"id": "tr-build-b-3", "family_id": "tr-build-b", "input": "Create a module for meeting reminders.", "task_type": "coding", "tool_intent": "build_module"}
+{"id": "tr-manage-b-0", "family_id": "tr-manage-b", "input": "Manage modules: show what is installed.", "task_type": "general", "tool_intent": "manage_modules"}
+{"id": "tr-manage-b-1", "family_id": "tr-manage-b", "input": "Which modules are enabled?", "task_type": "general", "tool_intent": "manage_modules"}
+{"id": "tr-manage-b-2", "family_id": "tr-manage-b", "input": "Remove module weather.", "task_type": "general", "tool_intent": "manage_modules"}
+{"id": "tr-manage-b-3", "family_id": "tr-manage-b", "input": "List modules and their status.", "task_type": "general", "tool_intent": "manage_modules"}

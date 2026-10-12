@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Replay workload row",
+  "type": "object",
+  "required": ["id", "family_id", "bucket", "class", "session_id", "input", "context", "expected"],
+  "properties": {
+    "id": {"type": "string"},
+    "family_id": {"type": "string", "description": "Scenario family; never shared with train.jsonl"},
+    "bucket": {"enum": ["coding", "reasoning", "finance", "multilingual", "assistant", "ambiguous", "mixed", "unavailable"]},
+    "class": {"enum": ["foreground", "background"]},
+    "session_id": {"type": "string"},
+    "input": {"type": "string"},
+    "context": {"type": "object"},
+    "max_output_tokens": {"type": "integer"},
+    "expected": {
+      "type": "object",
+      "required": ["task_type", "capabilities", "tool_intent", "action", "logical_tier", "required_tools", "rubric", "abstention_rationale"],
+      "properties": {
+        "task_type": {"enum": ["coding", "reasoning", "math", "finance", "multilingual", "search", "general"]},
+        "capabilities": {"type": "array", "items": {"type": "string"}},
+        "tool_intent": {"type": ["string", "null"]},
+        "action": {"enum": ["answer", "fixture_tools", "clarify", "needs_decomposition", "unavailable"]},
+        "logical_tier": {"enum": ["heavy", "standard", "external"]},
+        "required_tools": {"type": "array", "items": {"type": "string"}},
+        "rubric": {"type": ["string", "null"], "description": "Substring a correct answer must contain"},
+        "abstention_rationale": {"type": ["string", "null"]}
+      }
+    },
+    "legacy_expected": {"type": "object", "description": "What the legacy NEXUS keyword/LLM path does; stored separately, never ground truth"}
+  }
+}

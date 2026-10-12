@@ -1,0 +1,235 @@
+diff --git a/core/ane_runtime.cpp b/core/ane_runtime.cpp
+index b069ad9..564c96b 100644
+--- a/core/ane_runtime.cpp
++++ b/core/ane_runtime.cpp
+@@ -380,8 +380,14 @@ static id mil_gen_fused_ffn(int dim, int inter_ch) {
+         "pad_type = pt, strides = st, weight = Wg, x = x)[name = tensor<string, []>(\"cg\")];\n"
+         "        tensor<fp16, [1, %d, 1, %d]> up = conv(dilations = dl, groups = gr, pad = pd, "
+         "pad_type = pt, strides = st, weight = Wu, x = x)[name = tensor<string, []>(\"cu\")];\n"
+-        "        tensor<fp16, [1, %d, 1, %d]> sig = sigmoid(x = gate)[name = tensor<string, []>(\"sg\")];\n"
+-        "        tensor<fp16, [1, %d, 1, %d]> silu = mul(x = gate, y = sig)[name = tensor<string, []>(\"sl\")];\n"
++        // silu = g / (1 + exp(-g)): the ANE's sigmoid op carries ~3e-3 absolute error over the whole input range,
++        // which SwiGLU amplifies to ~2e-2 relative FFN error; the exp form measured 2.6e-3 at the same dispatch cost.
++        "        tensor<fp16, []> one = const()[name = tensor<string, []>(\"one\"), val = tensor<fp16, []>(1.0)];\n"
++        "        tensor<fp16, []> mone = const()[name = tensor<string, []>(\"mone\"), val = tensor<fp16, []>(-1.0)];\n"
++        "        tensor<fp16, [1, %d, 1, %d]> ng = mul(x = gate, y = mone)[name = tensor<string, []>(\"ng\")];\n"
++        "        tensor<fp16, [1, %d, 1, %d]> ex = exp(x = ng)[name = tensor<string, []>(\"ex\")];\n"
++        "        tensor<fp16, [1, %d, 1, %d]> den = add(x = ex, y = one)[name = tensor<string, []>(\"den\")];\n"
++        "        tensor<fp16, [1, %d, 1, %d]> silu = real_div(x = gate, y = den)[name = tensor<string, []>(\"sl\")];\n"
+         "        tensor<fp16, [1, %d, 1, %d]> fused = mul(x = silu, y = up)[name = tensor<string, []>(\"fu\")];\n"
+         "        tensor<fp16, [1, %d, 1, %d]> out = conv(dilations = dl, groups = gr, pad = pd, "
+         "pad_type = pt, strides = st, weight = Wd, x = fused)[name = tensor<string, []>(\"cd\")];\n"
+@@ -392,7 +398,7 @@ static id mil_gen_fused_ffn(int dim, int inter_ch) {
+         inter_ch, dim, inter_ch, dim,
+         dim, inter_ch, dim, inter_ch,
+         inter_ch, SP, inter_ch, SP,
+-        inter_ch, SP, inter_ch, SP, inter_ch, SP,
++        inter_ch, SP, inter_ch, SP, inter_ch, SP, inter_ch, SP, inter_ch, SP,
+         dim, SP);
+     return ns_data(buf, n);
+ }
+@@ -481,8 +487,14 @@ static id mil_gen_ffn_chunk_accum(int dim, int chunk_inter) {
+         "        tensor<fp16, [1, %d, 1, %d]> up = conv(dilations = dl, groups = gr, pad = pd, "
+         "pad_type = pt, strides = st, weight = Wu, x = x)[name = tensor<string, []>(\"cu\")];\n"
+         // SiLU activation
+-        "        tensor<fp16, [1, %d, 1, %d]> sig = sigmoid(x = gate)[name = tensor<string, []>(\"sg\")];\n"
+-        "        tensor<fp16, [1, %d, 1, %d]> silu = mul(x = gate, y = sig)[name = tensor<string, []>(\"sl\")];\n"
++        // silu = g / (1 + exp(-g)): the ANE's sigmoid op carries ~3e-3 absolute error over the whole input range,
++        // which SwiGLU amplifies to ~2e-2 relative FFN error; the exp form measured 2.6e-3 at the same dispatch cost.
++        "        tensor<fp16, []> one = const()[name = tensor<string, []>(\"one\"), val = tensor<fp16, []>(1.0)];\n"
++        "        tensor<fp16, []> mone = const()[name = tensor<string, []>(\"mone\"), val = tensor<fp16, []>(-1.0)];\n"
++        "        tensor<fp16, [1, %d, 1, %d]> ng = mul(x = gate, y = mone)[name = tensor<string, []>(\"ng\")];\n"
++        "        tensor<fp16, [1, %d, 1, %d]> ex = exp(x = ng)[name = tensor<string, []>(\"ex\")];\n"
++        "        tensor<fp16, [1, %d, 1, %d]> den = add(x = ex, y = one)[name = tensor<string, []>(\"den\")];\n"
++        "        tensor<fp16, [1, %d, 1, %d]> silu = real_div(x = gate, y = den)[name = tensor<string, []>(\"sl\")];\n"
+         "        tensor<fp16, [1, %d, 1, %d]> fused = mul(x = silu, y = up)[name = tensor<string, []>(\"fu\")];\n"
+         // down projection (partial)
+         "        tensor<fp16, [1, %d, 1, %d]> partial = conv(dilations = dl, groups = gr, pad = pd, "
+@@ -502,7 +514,9 @@ static id mil_gen_ffn_chunk_accum(int dim, int chunk_inter) {
+         /* Wd */ dim, chunk_inter, dim, chunk_inter,
+         /* gate */ chunk_inter, SP,
+         /* up */ chunk_inter, SP,
+-        /* sig */ chunk_inter, SP,
++        /* ng */ chunk_inter, SP,
++        /* ex */ chunk_inter, SP,
++        /* den */ chunk_inter, SP,
+         /* silu */ chunk_inter, SP,
+         /* fused */ chunk_inter, SP,
+         /* partial */ dim, SP,
+diff --git a/generate.cpp b/generate.cpp
+index 63b073d..22d52a4 100644
+--- a/generate.cpp
++++ b/generate.cpp
+@@ -40,6 +40,20 @@ static size_t utf8_boundary_at_or_before(const std::string& s, size_t cut) {
+     return cut;
+ }
+ 
++
++// --- R3 trace hook (passive): ANE_TRACE_PATH=<file> appends one JSON line per step with the top-16 logits.
++#include <algorithm>
++static FILE* r3_trace_file() { static FILE* f = nullptr; static bool init = false; if (!init) { init = true; const char* p = getenv("ANE_TRACE_PATH"); if (p) f = fopen(p, "a"); } return f; }
++static void r3_trace_prompt(const std::vector<int>& ids) { FILE* f = r3_trace_file(); if (!f) return; fprintf(f, "{\"prompt_ids\":["); for (size_t i = 0; i < ids.size(); i++) fprintf(f, "%s%d", i ? "," : "", ids[i]); fprintf(f, "]}\n"); }
++static void r3_trace_step(int step, const float* logits, int vocab, int token) {
++    FILE* f = r3_trace_file(); if (!f) return;
++    std::vector<int> idx(vocab); for (int i = 0; i < vocab; i++) idx[i] = i;
++    std::partial_sort(idx.begin(), idx.begin() + 16, idx.end(), [&](int a, int b) { return logits[a] > logits[b]; });
++    fprintf(f, "{\"step\":%d,\"token\":%d,\"top\":[", step, token);
++    for (int i = 0; i < 16; i++) fprintf(f, "%s[%d,%.6g]", i ? "," : "", idx[i], logits[idx[i]]);
++    fprintf(f, "]}\n"); fflush(f);
++}
++
+ void stream_generate(
+     LLMModel& model,
+     Tokenizer& tokenizer,
+@@ -60,6 +74,7 @@ void stream_generate(
+         }
+     }
+     std::vector<int> prompt_tokens = tokenizer.encode(formatted);
++    r3_trace_prompt(prompt_tokens);
+ 
+     bool use_external_speculative =
+         draft && draft->model && draft->tokenizer &&
+@@ -409,6 +424,7 @@ void stream_generate(
+         }
+ 
+         int next_token = sample_token(logits, sampler_vocab, sampling, generated_tokens);
++        r3_trace_step(n_generated, logits, sampler_vocab, next_token);
+         if (is_stop_token(next_token, tokenizer)) {
+             break;
+         }
+diff --git a/main.cpp b/main.cpp
+index 45d93ed..41cff87 100644
+--- a/main.cpp
++++ b/main.cpp
+@@ -18,6 +18,7 @@
+ #include <unistd.h>
+ #include <ane_lm/common.h>
+ #include <nlohmann/json.hpp>
++#include <fstream>
+ #include "utils.h"
+ #include "generate.h"
+ #include "core/model_loader.h"
+@@ -65,6 +66,7 @@ struct Args {
+     const char* model_dir = nullptr;
+     const char* draft_model_dir = nullptr;
+     const char* prompt = "Hello";
++    const char* prompts_file = nullptr;   // R3: JSON array of prompts, run sequentially in one process
+     float temperature = 0.7f;
+     int max_tokens = 0;
+     float repetition_penalty = 1.0f;
+@@ -87,6 +89,8 @@ static Args parse_args(int argc, char* argv[], int start) {
+             args.draft_model_dir = argv[++i];
+         } else if (strcmp(argv[i], "--prompt") == 0 && i + 1 < argc) {
+             args.prompt = argv[++i];
++        } else if (strcmp(argv[i], "--prompts-file") == 0 && i + 1 < argc) {
++            args.prompts_file = argv[++i];
+         } else if (strcmp(argv[i], "--max-tokens") == 0 && i + 1 < argc) {
+             args.max_tokens = atoi(argv[++i]);
+         } else if (strcmp(argv[i], "--temp") == 0 && i + 1 < argc) {
+@@ -411,6 +415,22 @@ static int cmd_serve(Qwen35Model& model, Tokenizer& tokenizer, const Args& args)
+ 
+ static int cmd_generate(LLMModel& model, Tokenizer& tokenizer,
+                         DraftModelContext* draft, const Args& args) {
++    if (args.prompts_file) {
++        std::ifstream pf(args.prompts_file);
++        nlohmann::json arr = nlohmann::json::parse(pf);
++        int i = 0;
++        for (auto& p : arr) {
++            std::string ps = p.get<std::string>();
++            fprintf(stderr, "### CASE %d\n", i);
++            if (const char* tp = getenv("ANE_TRACE_PATH")) { FILE* tf = fopen(tp, "a"); if (tf) { fprintf(tf, "{\"case\":%d}\n", i); fclose(tf); } }
++            model.reset();
++            if (draft && draft->model) draft->model->reset();
++            Args one = args; one.prompt = ps.c_str(); one.prompts_file = nullptr;
++            cmd_generate(model, tokenizer, draft, one);
++            i++;
++        }
++        return 0;
++    }
+     LOG("Prompt: \"%s\"\n", args.prompt);
+ 
+     SamplingParams sampling;
+diff --git a/models/llm/qwen3.cpp b/models/llm/qwen3.cpp
+index 3a5b076..20dc285 100644
+--- a/models/llm/qwen3.cpp
++++ b/models/llm/qwen3.cpp
+@@ -443,6 +443,7 @@ bool Qwen3Model::compile_ane(ModelWeights* sf, const std::string& blob_dir) {
+ 
+     bool use_blobs = !blob_dir.empty();
+     LOG("Compiling Qwen3 ANE kernels%s...\n", use_blobs ? " (from blobs)" : "");
++    int r3_ffn_resadd = 0, r3_ffn_fused = 0, r3_ffn_chunked = 0;
+ 
+     char name[256], name2[256], name3[256], name4[256];
+ 
+@@ -578,8 +579,11 @@ bool Qwen3Model::compile_ane(ModelWeights* sf, const std::string& blob_dir) {
+                 }
+             }
+ 
+-            // Try fused FFN + residual add first
+-            if (use_blobs) {
++            // Try fused FFN + residual add first (R3: ANE_FORCE_PLAIN_FFN=1 skips it so the plain fused FFN is exercised)
++            static const bool r3_force_plain = getenv("ANE_FORCE_PLAIN_FFN") != nullptr;
++            if (r3_force_plain) {
++                ane_layers_[L].ffn_resadd = nullptr;
++            } else if (use_blobs) {
+                 ane_layers_[L].ffn_resadd = ane_compile_fused_ffn_resadd_blob(
+                     blob_path(blob_dir, name), blob_path(blob_dir, name2),
+                     blob_path(blob_dir, name3), hidden_size_, intermediate_size_);
+@@ -601,6 +605,7 @@ bool Qwen3Model::compile_ane(ModelWeights* sf, const std::string& blob_dir) {
+                 }
+             }
+         }
++        if (ane_layers_[L].ffn_resadd) r3_ffn_resadd++; else if (ane_layers_[L].fused_ffn) r3_ffn_fused++; else r3_ffn_chunked++;
+         if (!ane_layers_[L].ffn_resadd && !ane_layers_[L].fused_ffn) {
+             if (ffn_chunks <= 1) ffn_chunks = 2;
+             if (L == 0) LOG("  Using chunked FFN (%d chunks, inter=%d)\n", ffn_chunks, intermediate_size_);
+@@ -624,6 +629,7 @@ bool Qwen3Model::compile_ane(ModelWeights* sf, const std::string& blob_dir) {
+ 
+     int compiled = ane_compile_count();
+     int cached = ane_cache_loads();
++    fprintf(stderr, "R3 FFN kernel map: resadd=%d fused=%d chunked=%d force_plain=%d\n", r3_ffn_resadd, r3_ffn_fused, r3_ffn_chunked, getenv("ANE_FORCE_PLAIN_FFN") != nullptr);
+     LOG("  %d ANE layer kernels ready (compiled=%d, cached=%d, cross-layer fused=%d/%d, same-layer fused=%d/%d)\n",
+         compiled + cached, compiled, cached, fused_count, num_layers_ - 1,
+         same_layer_fused_count, num_layers_);
+diff --git a/models/llm/qwen3_5.cpp b/models/llm/qwen3_5.cpp
+index 0f595c9..379c3e7 100644
+--- a/models/llm/qwen3_5.cpp
++++ b/models/llm/qwen3_5.cpp
+@@ -532,6 +532,7 @@ bool Qwen35Model::compile_ane(ModelWeights* sf, const std::string& blob_dir) {
+ 
+     bool use_blobs = !blob_dir.empty();
+     LOG("Compiling ANE kernels%s...\n", use_blobs ? " (from blobs)" : "");
++    int r3_ffn_resadd = 0, r3_ffn_fused = 0, r3_ffn_chunked = 0;
+     char name[256], name2[256], name3[256];
+ 
+     for (int L = 0; L < num_layers_; L++) {
+@@ -600,8 +601,11 @@ bool Qwen35Model::compile_ane(ModelWeights* sf, const std::string& blob_dir) {
+ 
+         int ffn_chunks = ane_ffn_chunk_count(hidden_size_, intermediate_size_);
+         if (ffn_chunks <= 1) {
+-            // Try fused FFN + residual add first
+-            if (use_blobs) {
++            // Try fused FFN + residual add first (R3: ANE_FORCE_PLAIN_FFN=1 skips it so the plain fused FFN is exercised)
++            static const bool r3_force_plain = getenv("ANE_FORCE_PLAIN_FFN") != nullptr;
++            if (r3_force_plain) {
++                ane_layers_[L].ffn_resadd = nullptr;
++            } else if (use_blobs) {
+                 ane_layers_[L].ffn_resadd = ane_compile_fused_ffn_resadd_blob(
+                     blob_path(blob_dir, name), blob_path(blob_dir, name2),
+                     blob_path(blob_dir, name3), hidden_size_, intermediate_size_);
+@@ -622,6 +626,7 @@ bool Qwen35Model::compile_ane(ModelWeights* sf, const std::string& blob_dir) {
+                 }
+             }
+         }
++        if (ane_layers_[L].ffn_resadd) r3_ffn_resadd++; else if (ane_layers_[L].fused_ffn) r3_ffn_fused++; else r3_ffn_chunked++;
+         if (!ane_layers_[L].ffn_resadd && !ane_layers_[L].fused_ffn) {
+             // Fall back to chunked FFN
+             if (ffn_chunks <= 1) ffn_chunks = ane_ffn_chunk_count(hidden_size_, intermediate_size_);
+@@ -647,6 +652,7 @@ bool Qwen35Model::compile_ane(ModelWeights* sf, const std::string& blob_dir) {
+ 
+     int compiled = ane_compile_count();
+     int cached = ane_cache_loads();
++    fprintf(stderr, "R3 FFN kernel map: resadd=%d fused=%d chunked=%d force_plain=%d\n", r3_ffn_resadd, r3_ffn_fused, r3_ffn_chunked, getenv("ANE_FORCE_PLAIN_FFN") != nullptr);
+     LOG("  %d ANE layer kernels ready (compiled=%d, cached=%d)\n",
+         compiled + cached, compiled, cached);
+ 

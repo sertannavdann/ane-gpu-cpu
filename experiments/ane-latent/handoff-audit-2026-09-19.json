@@ -1,0 +1,34 @@
+{
+  "verified_utc": "2026-09-19T17:48:19.596720+00:00",
+  "source_hashes_match": true,
+  "records_by_kind": {
+    "cpu_synthetic": 84,
+    "analytical_estimate": 4
+  },
+  "synthetic_outcomes": {
+    "low_rank": {
+      "pass": 12
+    },
+    "zero": {
+      "pass": 12
+    },
+    "subnormal": {
+      "fail": 12
+    },
+    "distribution_shift": {
+      "fail": 12
+    },
+    "flat_spectrum": {
+      "fail": 12
+    },
+    "outlier_channels": {
+      "pass": 8,
+      "fail": 4
+    },
+    "overflow": {
+      "fail": 12
+    }
+  },
+  "tests": "21 passed in installed directory; no native execution",
+  "r4_log_size_at_read": 1668
+}
