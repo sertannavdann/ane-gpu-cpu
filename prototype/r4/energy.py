@@ -1,6 +1,12 @@
-"""Energy from a `sudo powermetrics --samplers cpu_power,gpu_power,ane_power -i 1000 -o LOG` text log.
-Integrates CPU, GPU and ANE mW over each window's [unix_t0, unix_t1] and writes tasks-per-joule into a run's summary.
-Usage: python -m prototype.r4.energy --log results/power-r4.log --run results/ane-r4-energy"""
+"""Energy per condition window from a power log, written into a run's summary as tasks per joule.
+
+The one meter is the nexus-voice power helper (root LaunchDaemon, `nexus_powerd.py --log`): one JSON
+line per 1 s sample with cpu/gpu/ane/combined mW and interval_ms, at /var/log/nexus-power.jsonl.
+A `.jsonl` log is read as that format. Any other extension is read as the legacy
+`sudo powermetrics --samplers cpu_power,gpu_power,ane_power -i 1000 -o LOG` text log, kept so the
+2026-09-19 R4 record (results/power-r4.log) stays reproducible.
+
+Usage: python -m prototype.r4.energy --log /var/log/nexus-power.jsonl --run results/<run-id>"""
 from __future__ import annotations
 import argparse, datetime, json, re
 from pathlib import Path
@@ -11,7 +17,28 @@ POWER = [("CPU Power", "cpu"), ("GPU Power", "gpu"), ("ANE Power", "ane"), ("Com
 
 
 def parse(path: Path):
-    """-> list of (unix_ts_of_sample_start, elapsed_s, {cpu,gpu,ane,combined} in W). Sample header time is the sample END on macOS."""
+    """-> list of (unix_ts_of_sample_end, elapsed_s, {cpu,gpu,ane,combined} in W)."""
+    return parse_jsonl(path) if path.suffix == ".jsonl" else parse_text(path)
+
+
+def parse_jsonl(path: Path):
+    """nexus_powerd samples: ts is taken when the sample is parsed, i.e. the sample END, like the text log header."""
+    rows = []
+    for line in path.read_text(errors="ignore").splitlines():
+        try:
+            s = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if "ts" not in s:
+            continue
+        p = {k: s.get(f"{k}_power_mw", 0.0) / 1000 for k in ("cpu", "gpu", "ane")}
+        p["combined"] = (s.get("combined_power_mw") or (s["cpu"] + s["gpu"] + s["ane"]) * 1000) / 1000
+        rows.append((float(s["ts"]), float(s.get("interval_ms") or 1000) / 1000, p))
+    return rows
+
+
+def parse_text(path: Path):
+    """Legacy powermetrics text log. Sample header time is the sample END on macOS."""
     rows, cur, ts, el = [], {}, None, None
     for line in path.read_text(errors="ignore").splitlines():
         m = HEADER.search(line)

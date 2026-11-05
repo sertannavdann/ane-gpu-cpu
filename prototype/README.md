@@ -100,5 +100,5 @@ bash prototype/ane/r3/build_variants.sh              # builds r3/bin/ane-trace a
 ```
 
 Foreground on the GPU (MLX), background extraction on the GPU (token-boundary preemption) or on the ANE (ane.cpp serve, one session).
-One background placement is resident at a time (memory guardrail). Energy needs a `sudo powermetrics --samplers cpu_power,gpu_power,ane_power -i 1000`
+One background placement is resident at a time (memory guardrail). Energy comes from the nexus-voice power helper's log (`/var/log/nexus-power.jsonl`, `python -m prototype.r4.energy --log <jsonl> --run <run>`); the legacy `sudo powermetrics --samplers cpu_power,gpu_power,ane_power -i 1000`
 text log passed as `--power-log`; without it energy is reported unavailable.
