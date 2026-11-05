@@ -7,14 +7,15 @@ The loop every P-series lab follows:
   2. MEASURE the running service over its own gRPC API.
   3. EXPLAIN the gap between the two.
 
-Run it with the gRPC_llm virtualenv (it has grpcio and tokenizers):
+Run it with the llm-tiers virtualenv (it has grpcio and tokenizers); the tiers live in the
+sibling llm-tiers package since 2026-11-05 (previously gRPC_llm/llm_service):
 
-  GRPC_LLM=".../Software/AI/gRPC_llm"
-  "$GRPC_LLM/llm_service/.venv/bin/python" labs/p3/llm_service_lab.py --root "$GRPC_LLM" \
+  TIERS=".../Software/AI/llm-tiers"
+  "$TIERS/.venv/bin/python" labs/p3/llm_service_lab.py --root "$TIERS" \
       --addr localhost:50051,localhost:50061 --seconds 30
 
-Nothing is written inside gRPC_llm. The service must already be running
-(`make llm-up` there). Each request is a normal Generate call.
+Nothing is written inside llm-tiers. The service must already be running
+(`make up TIER=heavy` there). Each request is a normal Generate call.
 """
 from __future__ import annotations
 
@@ -156,8 +157,18 @@ def analyse(m: dict) -> dict:
             "bits_per_weight": 8 * weight_bytes / params if params else 0, "tied": not has_head}
 
 
+def models_dir(root: pathlib.Path) -> pathlib.Path:
+    """Shared weight store: $LLM_MODELS_DIR, else <root>/../models.nosync (llm-tiers layout),
+    else the pre-2026-11 gRPC_llm symlink <root>/llm_service/models."""
+    env = os.environ.get("LLM_MODELS_DIR")
+    if env:
+        return pathlib.Path(env)
+    shared = root.parent / "models.nosync"
+    return shared if shared.exists() else root / "llm_service" / "models"
+
+
 def locate_weights(root: pathlib.Path, filename: str, name: str) -> pathlib.Path | None:
-    models = root / "llm_service" / "models"
+    models = models_dir(root)
     if filename.endswith(".gguf") and (models / filename).exists():
         return models / filename
     for snap in (models / "hf" / "hub").glob(f"models--*--{filename}/snapshots/*"):
@@ -173,7 +184,7 @@ def find_tokenizer(root: pathlib.Path):
         from tokenizers import Tokenizer
     except ImportError:
         return None
-    for tj in (root / "llm_service" / "models" / "hf" / "hub").glob("models--*Qwen2.5*/snapshots/*/tokenizer.json"):
+    for tj in (models_dir(root) / "hf" / "hub").glob("models--*Qwen2.5*/snapshots/*/tokenizer.json"):
         return Tokenizer.from_file(str(tj))
     return None
 
@@ -181,9 +192,13 @@ def find_tokenizer(root: pathlib.Path):
 # --------------------------------------------------------------------------- measuring
 
 def load_stubs(root: pathlib.Path):
-    """Import only gRPC_llm's generated protobuf stubs (stable), nothing else from it."""
+    """Import only the generated protobuf stubs (stable), nothing else. --root is the llm-tiers
+    checkout; a pre-2026-11 gRPC_llm checkout (llm_service package) still works."""
     sys.path.insert(0, str(root))
-    from llm_service import llm_pb2, llm_pb2_grpc
+    try:
+        from llm_tiers import llm_pb2, llm_pb2_grpc
+    except ModuleNotFoundError:
+        from llm_service import llm_pb2, llm_pb2_grpc
     return llm_pb2, llm_pb2_grpc
 
 
