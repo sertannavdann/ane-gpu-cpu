@@ -33,8 +33,9 @@ HERE = pathlib.Path(__file__).resolve().parent
 ROOT = HERE.parent
 BUILD = HERE / "build"
 LABS = ["peak", "bandwidth", "latency", "gemm", "gemv", "quant"]
-OPT_IN = ["llm", "llamacpp"]  # llm: gRPC_llm tiers running; llamacpp: labs/p3 build + models
-GRPC_LLM = pathlib.Path.home() / "Documents" / "Documents - Sertan’s MacBook Pro" / "Software" / "AI" / "gRPC_llm"
+OPT_IN = ["llm", "llamacpp"]  # llm: llm-tiers running; llamacpp: labs/p3 build + models
+# The tiers live in the sibling llm-tiers package since 2026-11-05 (previously gRPC_llm/llm_service).
+GRPC_LLM = pathlib.Path(os.environ.get("LLM_TIERS_ROOT") or ROOT.parent / "AI" / "llm-tiers")
 BINARY = {"peak": "p1_peak", "bandwidth": "p1_bandwidth", "latency": "p1_latency", "gemm": "p1_gemm",
           "gemv": "p1_gemv", "quant": "p2_quant"}
 # Processes from the R/L-series that must not share the machine with a benchmark.

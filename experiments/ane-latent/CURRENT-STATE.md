@@ -2,7 +2,7 @@
 
 Snapshot: 19 September 2026. Installed framework tests were rerun during this audit: **21 passed**. All six framework source hashes match the recorded L0 manifest. The immutable registry contains **84 CPU synthetic cases and four analytical estimates**, with **zero native ANE measurements**.
 
-**L1 update, later on 19 September 2026:** the L0 state above was reproduced after the R4 run exited, then the evidence importer was hardened, a private fixed-prefix trace collector and a host-side packer were added, and the suite grew to **34 passing tests**. The new source manifest is `results/l1-smoke-001/manifest.json`. Details, per-population failure mechanisms and the gate reconciliation are in [L1 report](</Users/sertanavdan/Documents/Documents - Sertan’s MacBook Pro/Software/ANE:GPU:CPU/experiments/ane-latent/L1-REPORT-2026-09-19.md>). The native gate remains unmet; no ANE execution has occurred.
+**L1 update, later on 19 September 2026:** the L0 state above was reproduced after the R4 run exited, then the evidence importer was hardened, a private fixed-prefix trace collector and a host-side packer were added, and the suite grew to **34 passing tests**. The new source manifest is `results/l1-smoke-001/manifest.json`. Details, per-population failure mechanisms and the gate reconciliation are in [L1 report](</Users/sertanavdan/Dev/Software/ANE:GPU:CPU/experiments/ane-latent/L1-REPORT-2026-09-19.md>). The native gate remains unmet; no ANE execution has occurred.
 
 ## 1. Objective and boundaries
 
@@ -10,18 +10,18 @@ The original project investigates actual ANE computation in a local CPU/GPU/ANE 
 
 L-series implementation root:
 
-`/Users/sertanavdan/Documents/Documents - Sertan’s MacBook Pro/Software/ANE:GPU:CPU/experiments/ane-latent`
+`/Users/sertanavdan/Dev/Software/ANE:GPU:CPU/experiments/ane-latent`
 
 The R-series remains the main research track. L-series results do not alter R gates, substitute for R model qualification, or authorize automatic adoption. No R-series source, checkpoint, runtime symlink or result was changed by this work. No ANE/MLX model was launched for L0.
 
 Authoritative documents:
 
-- [Development guideline](</Users/sertanavdan/Documents/Documents - Sertan’s MacBook Pro/Software/ANE:GPU:CPU/docs/instructions.md>)
-- [Main R-series plan](</Users/sertanavdan/Documents/Documents - Sertan’s MacBook Pro/Software/ANE:GPU:CPU/docs/agentic-offload-prototype-plan.md>)
-- [L-series scope and gates](</Users/sertanavdan/Documents/Documents - Sertan’s MacBook Pro/Software/ANE:GPU:CPU/experiments/ane-latent/PLAN.md>)
-- [Runnable framework guide](</Users/sertanavdan/Documents/Documents - Sertan’s MacBook Pro/Software/ANE:GPU:CPU/experiments/ane-latent/README.md>)
-- [Original L0 findings](</Users/sertanavdan/Documents/Documents - Sertan’s MacBook Pro/Software/ANE:GPU:CPU/experiments/ane-latent/FINDINGS.md>)
-- [CLI transfer and execution guide](</Users/sertanavdan/Documents/Documents - Sertan’s MacBook Pro/Software/ANE:GPU:CPU/experiments/ane-latent/CLI-HANDOFF.md>)
+- [Development guideline](</Users/sertanavdan/Dev/Software/ANE:GPU:CPU/docs/instructions.md>)
+- [Main R-series plan](</Users/sertanavdan/Dev/Software/ANE:GPU:CPU/docs/agentic-offload-prototype-plan.md>)
+- [L-series scope and gates](</Users/sertanavdan/Dev/Software/ANE:GPU:CPU/experiments/ane-latent/PLAN.md>)
+- [Runnable framework guide](</Users/sertanavdan/Dev/Software/ANE:GPU:CPU/experiments/ane-latent/README.md>)
+- [Original L0 findings](</Users/sertanavdan/Dev/Software/ANE:GPU:CPU/experiments/ane-latent/FINDINGS.md>)
+- [CLI transfer and execution guide](</Users/sertanavdan/Dev/Software/ANE:GPU:CPU/experiments/ane-latent/CLI-HANDOFF.md>)
 
 ## 2. Relevant R-series evidence, including newer shared-project work
 
@@ -34,9 +34,9 @@ Authoritative documents:
 | Initial R3, Qwen3-0.6B | All conditions scored 3/30 under the original contract | The original small-model task was unqualified; kernel parity is not task usefulness |
 | Newer R3, Qwen3.5-4B, fixture v2 | Three ANE conditions 24/30, MLX 23/30; 30/30 schema validity | Newer evidence supersedes 3/30 as the latest shared-project task result, but still misses 27/30 |
 
-The latest inspected model report is [Qwen3.5-4B v2 report](</Users/sertanavdan/Documents/Documents - Sertan’s MacBook Pro/Software/ANE:GPU:CPU/results/ane-r3-model-4b-v2/report.md>). Its fixture/scorer differs from the original 0.6B evaluation, so score improvements cannot be attributed solely to model size. The main plan also records a fixed duplicate-case-ID bug; future experiments must validate unique IDs before writing case results.
+The latest inspected model report is [Qwen3.5-4B v2 report](</Users/sertanavdan/Dev/Software/ANE:GPU:CPU/results/ane-r3-model-4b-v2/report.md>). Its fixture/scorer differs from the original 0.6B evaluation, so score improvements cannot be attributed solely to model size. The main plan also records a fixed duplicate-case-ID bug; future experiments must validate unique IDs before writing case results.
 
-**Shared-project state discrepancy:** the written plan still says R4 is not entered, but R4-named concurrency artifacts exist. At inspection, `/Users/sertanavdan/Documents/Documents - Sertan’s MacBook Pro/Software/ANE:GPU:CPU/results/r4-run.log` recorded seven window summaries out of eleven, with no final report observed in `/Users/sertanavdan/Documents/Documents - Sertan’s MacBook Pro/Software/ANE:GPU:CPU/results/ane-r4-concurrent`. This is partial evidence, not proof of a currently live process, a completed experiment or a satisfied entry gate. The CLI agent must recheck current logs and run metadata, reconcile whether this is an authorized exploratory run, and avoid interfering. Do not restart, stop, repair or reinterpret that work as part of L.
+**Shared-project state discrepancy:** the written plan still says R4 is not entered, but R4-named concurrency artifacts exist. At inspection, `/Users/sertanavdan/Dev/Software/ANE:GPU:CPU/results/r4-run.log` recorded seven window summaries out of eleven, with no final report observed in `/Users/sertanavdan/Dev/Software/ANE:GPU:CPU/results/ane-r4-concurrent`. This is partial evidence, not proof of a currently live process, a completed experiment or a satisfied entry gate. The CLI agent must recheck current logs and run metadata, reconcile whether this is an authorized exploratory run, and avoid interfering. Do not restart, stop, repair or reinterpret that work as part of L.
 
 Illustratively, the partial R4 log shows foreground p95 TTFT around 157–175 ms with ANE background work versus 442–567 ms with GPU background work, but background correct throughput around 6.8/min versus 34–35.2/min respectively. Those are unfinished-run observations under recorded memory pressure, not an adoption result or energy comparison.
 
@@ -66,7 +66,7 @@ FP16 has maximum finite magnitude 65504, minimum normal 2^-14, and minimum subno
 
 ## 4. Implementation inventory and readiness
 
-All paths in this table are beneath `/Users/sertanavdan/Documents/Documents - Sertan’s MacBook Pro/Software/ANE:GPU:CPU/experiments/ane-latent`.
+All paths in this table are beneath `/Users/sertanavdan/Dev/Software/ANE:GPU:CPU/experiments/ane-latent`.
 
 | Component | Implemented | Not established |
 | --- | --- | --- |
@@ -105,10 +105,10 @@ Each smoke record includes raw paired CPU duration samples, p50 gains, p95 regre
 
 Current evidence:
 
-- [Registry report](</Users/sertanavdan/Documents/Documents - Sertan’s MacBook Pro/Software/ANE:GPU:CPU/experiments/ane-latent/results/l0-smoke-002/report.md>)
-- Manifest: `/Users/sertanavdan/Documents/Documents - Sertan’s MacBook Pro/Software/ANE:GPU:CPU/experiments/ane-latent/results/l0-smoke-002/manifest.json`
-- Immutable records: `/Users/sertanavdan/Documents/Documents - Sertan’s MacBook Pro/Software/ANE:GPU:CPU/experiments/ane-latent/results/l0-smoke-002/registry/`
-- Audit receipt: `/Users/sertanavdan/Documents/Documents - Sertan’s MacBook Pro/Software/ANE:GPU:CPU/experiments/ane-latent/handoff-audit-2026-09-19.json`
+- [Registry report](</Users/sertanavdan/Dev/Software/ANE:GPU:CPU/experiments/ane-latent/results/l0-smoke-002/report.md>)
+- Manifest: `/Users/sertanavdan/Dev/Software/ANE:GPU:CPU/experiments/ane-latent/results/l0-smoke-002/manifest.json`
+- Immutable records: `/Users/sertanavdan/Dev/Software/ANE:GPU:CPU/experiments/ane-latent/results/l0-smoke-002/registry/`
+- Audit receipt: `/Users/sertanavdan/Dev/Software/ANE:GPU:CPU/experiments/ane-latent/handoff-audit-2026-09-19.json`
 
 The six source hashes match the stored manifest. Test code itself is not included in that source manifest, a provenance improvement to include in the next harness revision. Preserve the existing manifest; append a new run after changes.
 
@@ -133,7 +133,7 @@ Current imported-native kernel assessment requires valid baseline, declared inte
 
 The decision can be `retain_local`, `reject`, `invalid` or `inconclusive`. It always leaves model adoption unevaluated. Both dense and factorized paths must use the same timing boundary and workload.
 
-Procedural/model gates from [L plan](</Users/sertanavdan/Documents/Documents - Sertan’s MacBook Pro/Software/ANE:GPU:CPU/experiments/ane-latent/PLAN.md>), not implemented in the importer:
+Procedural/model gates from [L plan](</Users/sertanavdan/Dev/Software/ANE:GPU:CPU/experiments/ane-latent/PLAN.md>), not implemented in the importer:
 
 - Qualified uncompressed model/prompt reaches >=27/30, with frozen scoring and inspected failures.
 - Live fixed-prefix replay succeeds with native FP16, MLX FP16 and the BF16 reference.
@@ -149,9 +149,9 @@ L1 status of those gaps: real held-out coverage at every S, unique case/window i
 
 Source directory, read-only:
 
-`/Users/sertanavdan/Documents/Documents - Sertan’s MacBook Pro/Software/Mercor/cuda-golden-kernels-l8hie`
+`/Users/sertanavdan/Dev/Software/Mercor/cuda-golden-kernels-l8hie`
 
-Inspected files: `scripts/seed_benchmark.py`, `scripts/benchmark_framework.py`, `scripts/input_variants/README.md`, and `scripts/io/test_comparison.py`. Exact hashes are in `/Users/sertanavdan/Documents/Documents - Sertan’s MacBook Pro/Software/ANE:GPU:CPU/experiments/ane-latent/mercor-influence.json`.
+Inspected files: `scripts/seed_benchmark.py`, `scripts/benchmark_framework.py`, `scripts/input_variants/README.md`, and `scripts/io/test_comparison.py`. Exact hashes are in `/Users/sertanavdan/Dev/Software/ANE:GPU:CPU/experiments/ane-latent/mercor-influence.json`.
 
 Adopted: deterministic variants, independent reference/candidate paths, explicit timing boundaries, preserved failures and provenance. Not adopted: remote agents, CUDA execution infrastructure, a different speedup gate, or matching nonfinite outputs as success. This is attributed methodological influence, not Mercor accreditation or endorsement.
 
@@ -159,4 +159,4 @@ Adopted: deterministic variants, independent reference/candidate paths, explicit
 
 First reproduce the installed tests and a fresh uniquely named smoke run. Then harden the evidence contract and implement live fixed-prefix collection privately. Reconcile the newer R-series status read-only. Do not run real calibration/factorization or native benchmarks while prerequisites remain unresolved or R hardware measurements are active.
 
-When gates permit: fit one layer only, export immutable FP16 factors, create a private namespaced native runtime, compile dense and two-stage graphs, validate all shapes and numerical cases, then run paired timings and the full-FFN comparison. No automatic promotion. The exact transfer prompt, commands and stop conditions are in [CLI handoff](</Users/sertanavdan/Documents/Documents - Sertan’s MacBook Pro/Software/ANE:GPU:CPU/experiments/ane-latent/CLI-HANDOFF.md>).
+When gates permit: fit one layer only, export immutable FP16 factors, create a private namespaced native runtime, compile dense and two-stage graphs, validate all shapes and numerical cases, then run paired timings and the full-FFN comparison. No automatic promotion. The exact transfer prompt, commands and stop conditions are in [CLI handoff](</Users/sertanavdan/Dev/Software/ANE:GPU:CPU/experiments/ane-latent/CLI-HANDOFF.md>).

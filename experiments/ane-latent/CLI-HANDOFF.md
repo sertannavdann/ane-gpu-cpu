@@ -8,18 +8,18 @@ This document is the task transfer. Read the current-state report first. This is
 Continue the isolated L-series ANE factorization experiment.
 
 Workspace:
-/Users/sertanavdan/Documents/Documents - Sertan’s MacBook Pro/Software/ANE:GPU:CPU
+/Users/sertanavdan/Dev/Software/ANE:GPU:CPU
 
 Your writable implementation scope:
-/Users/sertanavdan/Documents/Documents - Sertan’s MacBook Pro/Software/ANE:GPU:CPU/experiments/ane-latent
+/Users/sertanavdan/Dev/Software/ANE:GPU:CPU/experiments/ane-latent
 
 Read, in order:
-1. /Users/sertanavdan/Documents/Documents - Sertan’s MacBook Pro/Software/ANE:GPU:CPU/docs/instructions.md
-2. /Users/sertanavdan/Documents/Documents - Sertan’s MacBook Pro/Software/ANE:GPU:CPU/experiments/ane-latent/CURRENT-STATE.md
-3. /Users/sertanavdan/Documents/Documents - Sertan’s MacBook Pro/Software/ANE:GPU:CPU/experiments/ane-latent/PLAN.md
-4. /Users/sertanavdan/Documents/Documents - Sertan’s MacBook Pro/Software/ANE:GPU:CPU/experiments/ane-latent/README.md
-5. /Users/sertanavdan/Documents/Documents - Sertan’s MacBook Pro/Software/ANE:GPU:CPU/experiments/ane-latent/FINDINGS.md
-6. /Users/sertanavdan/Documents/Documents - Sertan’s MacBook Pro/Software/ANE:GPU:CPU/docs/agentic-offload-prototype-plan.md (read-only; reconcile newer run status)
+1. /Users/sertanavdan/Dev/Software/ANE:GPU:CPU/docs/instructions.md
+2. /Users/sertanavdan/Dev/Software/ANE:GPU:CPU/experiments/ane-latent/CURRENT-STATE.md
+3. /Users/sertanavdan/Dev/Software/ANE:GPU:CPU/experiments/ane-latent/PLAN.md
+4. /Users/sertanavdan/Dev/Software/ANE:GPU:CPU/experiments/ane-latent/README.md
+5. /Users/sertanavdan/Dev/Software/ANE:GPU:CPU/experiments/ane-latent/FINDINGS.md
+6. /Users/sertanavdan/Dev/Software/ANE:GPU:CPU/docs/agentic-offload-prototype-plan.md (read-only; reconcile newer run status)
 
 The installed L0 framework has 21 passing tests, 84 CPU synthetic records and
 four analytical estimates. No L-series graph has been compiled/executed on ANE.
@@ -68,7 +68,7 @@ speedup or a theory estimate as ANE improvement. Do not claim SRAM residency
 without observable evidence. Do not promote a kernel into an R-series binary.
 
 Use Mercor only as read-only methodological reference:
-/Users/sertanavdan/Documents/Documents - Sertan’s MacBook Pro/Software/Mercor/cuda-golden-kernels-l8hie
+/Users/sertanavdan/Dev/Software/Mercor/cuda-golden-kernels-l8hie
 Its source influence is already hashed in mercor-influence.json. Do not launch
 its remote agent/CUDA pipeline or claim accreditation.
 
@@ -83,7 +83,7 @@ document paths. Keep R-series files and existing results unchanged.
 These commands use the existing interpreter read-only; they do not install into or modify it. It provided Python with NumPy 2.4.1 during the handoff audit. Revalidate availability on another machine/session. The project path contains spaces, a Unicode apostrophe and colons: quote it exactly. Do not use the old pre-move workspace path.
 
 ```bash
-cd '/Users/sertanavdan/Documents/Documents - Sertan’s MacBook Pro/Software/ANE:GPU:CPU/experiments/ane-latent'
+cd '/Users/sertanavdan/Dev/Software/ANE:GPU:CPU/experiments/ane-latent'
 L_PY='/Users/sertanavdan/miniconda3/bin/python3'
 export PYTHONDONTWRITEBYTECODE=1
 export OPENBLAS_NUM_THREADS=1
@@ -101,7 +101,7 @@ Source-integrity verification, with explicit failure if implementation and origi
 "$L_PY" - <<'PY'
 from pathlib import Path
 import hashlib, json
-root = Path('/Users/sertanavdan/Documents/Documents - Sertan’s MacBook Pro/Software/ANE:GPU:CPU/experiments/ane-latent')
+root = Path('/Users/sertanavdan/Dev/Software/ANE:GPU:CPU/experiments/ane-latent')
 manifest = json.loads((root / 'results/l0-smoke-002/manifest.json').read_text())
 for name, expected in manifest['sources'].items():
     actual = hashlib.sha256((root / name).read_bytes()).hexdigest()
@@ -116,7 +116,7 @@ An intentional new implementation should receive a new source manifest and resul
 Fresh smoke run (the output directory must not exist):
 
 ```bash
-L_RUN="/Users/sertanavdan/Documents/Documents - Sertan’s MacBook Pro/Software/ANE:GPU:CPU/experiments/ane-latent/results/cli-smoke-$(date -u +%Y%m%dT%H%M%SZ)-$$"
+L_RUN="/Users/sertanavdan/Dev/Software/ANE:GPU:CPU/experiments/ane-latent/results/cli-smoke-$(date -u +%Y%m%dT%H%M%SZ)-$$"
 "$L_PY" lab.py smoke --out "$L_RUN" --seed 1729
 "$L_PY" lab.py report "$L_RUN/registry" --out "$L_RUN/registry-view.md"
 ```
@@ -179,7 +179,7 @@ Retain locally only with <=0.005 implementation and compression relative L2 on r
 
 Template:
 
-`/Users/sertanavdan/Documents/Documents - Sertan’s MacBook Pro/Software/ANE:GPU:CPU/experiments/ane-latent/native-evidence.template.json`
+`/Users/sertanavdan/Dev/Software/ANE:GPU:CPU/experiments/ane-latent/native-evidence.template.json`
 
 It is intentionally incomplete and cannot pass. A future producer must fill raw samples, execution observations, cases and backed artifact hashes. Do not set `artifacts_verified` manually; the importer recomputes it. Treat producer statements as evidence to audit, not independent attestation.
 
@@ -187,8 +187,8 @@ Example command after producing actual evidence (the source file below does not 
 
 ```bash
 "$L_PY" lab.py assess \
-  '/Users/sertanavdan/Documents/Documents - Sertan’s MacBook Pro/Software/ANE:GPU:CPU/experiments/ane-latent/results/native-run-001/evidence.json' \
-  --registry '/Users/sertanavdan/Documents/Documents - Sertan’s MacBook Pro/Software/ANE:GPU:CPU/experiments/ane-latent/results/native-imports/registry'
+  '/Users/sertanavdan/Dev/Software/ANE:GPU:CPU/experiments/ane-latent/results/native-run-001/evidence.json' \
+  --registry '/Users/sertanavdan/Dev/Software/ANE:GPU:CPU/experiments/ane-latent/results/native-imports/registry'
 ```
 
 Exit 0: retained locally. Exit 2: rejected, invalid or inconclusive; inspect the reason and preserve the receipt. Never translate exit 0 into automatic model adoption. KL/NLL and task gates are separate and not enforced by this importer yet.
@@ -203,11 +203,11 @@ No automatic upstream patch, R-plan edit, runtime symlink replacement, model che
 
 References, all absolute:
 
-- [Current verified state](</Users/sertanavdan/Documents/Documents - Sertan’s MacBook Pro/Software/ANE:GPU:CPU/experiments/ane-latent/CURRENT-STATE.md>)
-- [Experiment plan and model gates](</Users/sertanavdan/Documents/Documents - Sertan’s MacBook Pro/Software/ANE:GPU:CPU/experiments/ane-latent/PLAN.md>)
-- [Framework commands and importer limitations](</Users/sertanavdan/Documents/Documents - Sertan’s MacBook Pro/Software/ANE:GPU:CPU/experiments/ane-latent/README.md>)
-- [L0 findings](</Users/sertanavdan/Documents/Documents - Sertan’s MacBook Pro/Software/ANE:GPU:CPU/experiments/ane-latent/FINDINGS.md>)
-- [Registry report](</Users/sertanavdan/Documents/Documents - Sertan’s MacBook Pro/Software/ANE:GPU:CPU/experiments/ane-latent/results/l0-smoke-002/report.md>)
-- [Main project plan, read-only](</Users/sertanavdan/Documents/Documents - Sertan’s MacBook Pro/Software/ANE:GPU:CPU/docs/agentic-offload-prototype-plan.md>)
-- [Development guideline](</Users/sertanavdan/Documents/Documents - Sertan’s MacBook Pro/Software/ANE:GPU:CPU/docs/instructions.md>)
-- [Mercor variant methodology, read-only](</Users/sertanavdan/Documents/Documents - Sertan’s MacBook Pro/Software/Mercor/cuda-golden-kernels-l8hie/scripts/input_variants/README.md>)
+- [Current verified state](</Users/sertanavdan/Dev/Software/ANE:GPU:CPU/experiments/ane-latent/CURRENT-STATE.md>)
+- [Experiment plan and model gates](</Users/sertanavdan/Dev/Software/ANE:GPU:CPU/experiments/ane-latent/PLAN.md>)
+- [Framework commands and importer limitations](</Users/sertanavdan/Dev/Software/ANE:GPU:CPU/experiments/ane-latent/README.md>)
+- [L0 findings](</Users/sertanavdan/Dev/Software/ANE:GPU:CPU/experiments/ane-latent/FINDINGS.md>)
+- [Registry report](</Users/sertanavdan/Dev/Software/ANE:GPU:CPU/experiments/ane-latent/results/l0-smoke-002/report.md>)
+- [Main project plan, read-only](</Users/sertanavdan/Dev/Software/ANE:GPU:CPU/docs/agentic-offload-prototype-plan.md>)
+- [Development guideline](</Users/sertanavdan/Dev/Software/ANE:GPU:CPU/docs/instructions.md>)
+- [Mercor variant methodology, read-only](</Users/sertanavdan/Dev/Software/Mercor/cuda-golden-kernels-l8hie/scripts/input_variants/README.md>)
