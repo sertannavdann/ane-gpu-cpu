@@ -1,6 +1,6 @@
 {
   "relationship": "read-only methodological influence; not copied code or accreditation",
-  "root": "/Users/sertanavdan/Documents/Documents - Sertan\u2019s MacBook Pro/Software/Mercor/cuda-golden-kernels-l8hie",
+  "root": "/Users/sertanavdan/Dev/Software/Mercor/cuda-golden-kernels-l8hie",
   "files": [
     {
       "path": "scripts/seed_benchmark.py",
