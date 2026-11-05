@@ -23,7 +23,9 @@ uv pip install --python .venv/bin/python -r requirements-mlx.txt    # only for t
 .venv/bin/python -m prototype.run_replay --config configs/fault-injection.json
 ```
 
-The MLX generator reads models from `cache.nosync/hf` (prototype-owned `HF_HOME`); the pinned
+The MLX generator reads models from `cache.nosync/hf` (prototype-owned `HF_HOME`). Since 2026-11-05 that path is a
+symlink to the shared weight store `Software/AI/models.nosync/hf`, used by every sibling repo (`ln -s ../../AI/models.nosync/hf cache.nosync/hf`
+after a fresh clone); the pinned
 model is `mlx-community/Qwen2.5-3B-Instruct-4bit`, weights hash recorded in each manifest.
 
 Each run writes `results/<run-id>/{manifest.json,requests.jsonl,summary.json,report.md}`.
